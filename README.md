@@ -84,12 +84,37 @@ java -jar target/ytMusicSync-1.0.0.jar
 
 ## Testes
 
+O projeto possui 27 testes unitários cobrindo Domain, Repository e Service layers. Veja [TESTING.md](TESTING.md) para detalhes completos.
+
 **Via IntelliJ IDEA:**
 - Clique com botão direito na pasta `test` → Run 'All Tests'
 
 **Via Maven:**
 ```bash
 mvn test
+```
+
+### CI/CD - GitHub Actions
+
+O projeto utiliza GitHub Actions para garantir qualidade do código:
+
+- **PR Tests** (`.github/workflows/pr-tests.yml`): Executa automaticamente em PRs para `main`
+  - ✅ Roda todos os testes unitários
+  - ✅ Gera relatório de testes
+  - ✅ Faz build do projeto
+  - ✅ Upload de artefatos (JAR e test reports)
+
+- **Continuous Integration** (`.github/workflows/ci.yml`): Executa em todos os pushes
+  - ✅ Valida projeto Maven
+  - ✅ Compila código
+  - ✅ Roda testes
+  - ✅ Verifica package
+  - ✅ Quality gate
+
+**Status Badges:**
+```markdown
+![Tests](https://github.com/seu-usuario/ytMusicSync/actions/workflows/pr-tests.yml/badge.svg)
+![CI](https://github.com/seu-usuario/ytMusicSync/actions/workflows/ci.yml/badge.svg)
 ```
 
 ### Boas Práticas Implementadas

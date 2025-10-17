@@ -88,7 +88,35 @@ brew install ffmpeg
 ### Windows
 Baixe de: https://ffmpeg.org/download.html
 
+## Instalação do Maven (opcional)
+
+O Maven gerencia automaticamente as dependências do projeto.
+
+### Linux
+```bash
+# Arch
+sudo pacman -S maven
+
+# Ubuntu/Debian
+sudo apt install maven
+
+# Fedora
+sudo dnf install maven
+```
+
+### macOS
+```bash
+brew install maven
+```
+
+### Windows
+Baixe de: https://maven.apache.org/download.cgi
+
+**Nota**: Se você usa IntelliJ IDEA ou outra IDE moderna, o Maven já vem integrado e não precisa instalá-lo separadamente.
+
 ## Build do Projeto
+
+### Opção 1: IntelliJ IDEA (Recomendado)
 
 1. Clone o repositório:
 ```bash
@@ -96,31 +124,41 @@ git clone <seu-repo>
 cd ytMusicSync
 ```
 
-2. Baixe dependências:
+2. Abra o projeto no IntelliJ IDEA
+   - `File > Open` e selecione a pasta do projeto
+
+3. Aguarde a IDE detectar o `pom.xml` e baixar as dependências automaticamente
+   - Você verá uma notificação no canto inferior direito
+   - Ou clique em `Maven > Reload Project` no painel lateral direito
+
+4. Execute o projeto:
+   - Abra o arquivo `Main.java`
+   - Clique no botão ▶️ verde ao lado de `public static void main`
+
+### Opção 2: Maven (Linha de Comando)
+
+1. Clone o repositório:
 ```bash
-chmod +x *.sh
-./download-gson.sh
+git clone <seu-repo>
+cd ytMusicSync
 ```
 
-3. Compile:
+2. Compile o projeto:
 ```bash
-./build.sh
+mvn clean compile
 ```
 
-4. Execute:
+3. Execute:
 ```bash
-./run.sh
+mvn exec:java -Dexec.mainClass="Main"
 ```
 
-## Build via IntelliJ IDEA
+### Opção 3: Criar JAR executável
 
-Se estiver usando IntelliJ IDEA:
-
-1. Abra o projeto
-2. Vá em `File > Project Structure`
-3. Configure o JDK 21+
-4. Adicione `lib/gson-2.10.1.jar` às bibliotecas
-5. Execute `Main.java`
+```bash
+mvn clean package
+java -jar target/ytMusicSync-1.0.0.jar
+```
 
 ## Troubleshooting
 

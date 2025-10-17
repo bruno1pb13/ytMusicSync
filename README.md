@@ -49,27 +49,37 @@ src/
 
 ## Pré-requisitos
 
-- Java 21+ (com suporte a `void main()`)
+- Java 21+
+- Maven 3.6+ (ou use o Maven integrado da sua IDE)
 - yt-dlp instalado: `pip install yt-dlp`
 - FFmpeg (para conversão de áudio)
 
 ## Instalação
 
+### Usando IntelliJ IDEA (Recomendado)
+
 1. Clone o repositório
-2. Baixe as dependências:
+2. Abra o projeto no IntelliJ IDEA
+3. A IDE detectará automaticamente o `pom.xml` e baixará as dependências
+4. Execute clicando no botão ▶️ ao lado do método `main` em `Main.java`
+
+### Usando Maven (Linha de Comando)
+
+1. Clone o repositório
+2. Compile o projeto:
 ```bash
-chmod +x download-gson.sh
-./download-gson.sh
+mvn clean compile
 ```
 
-3. Compile o projeto:
+3. Execute:
 ```bash
-javac -cp "lib/*:src" -d out src/**/*.java src/*.java
+mvn exec:java -Dexec.mainClass="Main"
 ```
 
-4. Execute:
+Ou crie um JAR executável:
 ```bash
-java -cp "lib/*:out" Main
+mvn clean package
+java -jar target/ytMusicSync-1.0.0.jar
 ```
 
 ## Uso

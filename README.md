@@ -1,5 +1,4 @@
 # YT Music Sync
-
 Aplicação Java para sincronizar e baixar playlists do YouTube automaticamente usando yt-dlp.
 
 ## Características
@@ -12,8 +11,6 @@ Aplicação Java para sincronizar e baixar playlists do YouTube automaticamente 
 - **Configurável**: Personalize diretórios, intervalos e formatos
 
 ## Arquitetura
-
-Projeto construído seguindo princípios **SOLID**:
 
 ```
 src/
@@ -39,13 +36,6 @@ src/
 └── Main.java           # Ponto de entrada
 ```
 
-### Princípios SOLID Aplicados
-
-1. **Single Responsibility**: Cada classe tem uma única responsabilidade bem definida
-2. **Open/Closed**: Extensível através de interfaces, fechado para modificações
-3. **Liskov Substitution**: Implementações são intercambiáveis via interfaces
-4. **Interface Segregation**: Interfaces específicas e focadas
-5. **Dependency Inversion**: Dependências injetadas, classes dependem de abstrações
 
 ## Pré-requisitos
 
@@ -128,71 +118,6 @@ $ java -cp "lib/*:out" Main
 ║ 2. Listar Playlists               ║
 ...
 ```
-
-## Extensibilidade
-
-A arquitetura permite fácil extensão:
-
-### Adicionar novo downloader
-
-Implemente a interface `AudioDownloader`:
-
-```java
-public class CustomDownloader implements AudioDownloader {
-    @Override
-    public boolean download(Video video, String outputDirectory) {
-        // Sua implementação
-    }
-    // ...
-}
-```
-
-### Adicionar novo fetcher
-
-Implemente a interface `PlaylistFetcher`:
-
-```java
-public class CustomFetcher implements PlaylistFetcher {
-    @Override
-    public List<Video> fetchVideos(String playlistUrl) {
-        // Sua implementação
-    }
-    // ...
-}
-```
-
-### Adicionar nova persistência
-
-Implemente `PlaylistRepository` e `VideoRepository` para usar banco de dados SQL, NoSQL, etc.
-
-## Validação de Design
-
-Como desenvolvedor sênior, validei os seguintes aspectos:
-
-### ✓ Separação de Responsabilidades
-- Domínio isolado de infraestrutura
-- Lógica de negócio centralizada em serviços
-- Adaptadores encapsulam dependências externas
-
-### ✓ Testabilidade
-- Interfaces permitem mock de dependências
-- Entidades imutáveis facilitam testes
-- Lógica desacoplada de I/O
-
-### ✓ Manutenibilidade
-- Código autodocumentado com JavaDoc
-- Estrutura clara e previsível
-- Fácil localização de funcionalidades
-
-### ✓ Thread Safety
-- Repositórios usam ConcurrentHashMap
-- Scheduler gerencia threads corretamente
-- Shutdown gracioso de recursos
-
-### ✓ Tratamento de Erros
-- Try-catch em operações de I/O
-- Mensagens descritivas ao usuário
-- Logs de erro para debugging
 
 ## Melhorias Futuras
 

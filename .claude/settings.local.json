@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip3:*)",
+      "Bash(python3 -m pip:*)",
+      "Bash(python -m ensurepip:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(pacman:*)",
+      "Bash(sudo pacman:*)",
+      "Bash(~/.local/bin/yt-dlp:*)",
+      "Bash(cat:*)",
+      "Bash(echo:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

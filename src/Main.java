@@ -12,7 +12,9 @@
  * - Interface Segregation: Interfaces específicas e focadas
  * - Dependency Inversion: Dependências de abstrações, não implementações
  */
-void main() {
-    Application app = new Application();
-    app.start();
+public class Main {
+    public static void main(String[] args) {
+        Application app = new Application();
+        app.start();
+    }
 }

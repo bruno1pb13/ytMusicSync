@@ -34,6 +34,16 @@ src/
 │   └── Config.java
 ├── Application.java     # Camada de aplicação
 └── Main.java           # Ponto de entrada
+
+test/
+├── domain/              # Testes das entidades
+│   ├── VideoTest.java
+│   └── PlaylistTest.java
+├── repository/          # Testes de persistência
+│   ├── JsonVideoRepositoryTest.java
+│   └── JsonPlaylistRepositoryTest.java
+└── service/             # Testes de lógica de negócio
+    └── SyncServiceTest.java
 ```
 
 
@@ -71,6 +81,24 @@ Ou crie um JAR executável:
 mvn clean package
 java -jar target/ytMusicSync-1.0.0.jar
 ```
+
+## Testes
+
+**Via IntelliJ IDEA:**
+- Clique com botão direito na pasta `test` → Run 'All Tests'
+
+**Via Maven:**
+```bash
+mvn test
+```
+
+### Boas Práticas Implementadas
+
+- **Arrange-Act-Assert (AAA)**: Estrutura clara dos testes
+- **DisplayName**: Descrições em português para melhor legibilidade
+- **Mocks com Mockito**: Isolamento de dependências nos testes de serviço
+- **Setup/Teardown**: Limpeza de arquivos de teste antes e depois
+- **Testes concisos**: Cada teste valida um comportamento específico
 
 ## Uso
 
@@ -121,7 +149,8 @@ $ java -cp "lib/*:out" Main
 
 ## Melhorias Futuras
 
-- [ ] Adicionar testes unitários e de integração
+- [x] Adicionar testes unitários
+- [ ] Adicionar testes de integração
 - [ ] Implementar logging estruturado (SLF4J)
 - [ ] Suporte a banco de dados SQL
 - [ ] API REST para integração
@@ -129,6 +158,7 @@ $ java -cp "lib/*:out" Main
 - [ ] Retry logic para downloads falhados
 - [ ] Notificações (email, webhook)
 - [ ] Métricas e monitoring
+- [ ] Cobertura de código (JaCoCo)
 
 ## Licença
 

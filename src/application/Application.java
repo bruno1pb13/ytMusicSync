@@ -30,7 +30,6 @@ public class Application {
         this.config = new Config();
         this.scanner = new Scanner(System.in);
 
-        // Dependency Injection - construção das dependências
         PlaylistRepository playlistRepository = new JsonPlaylistRepository();
         VideoRepository videoRepository = new JsonVideoRepository();
 
@@ -54,7 +53,7 @@ public class Application {
     }
 
     public void triggerSyncNow() {
-        syncNow(); // chama o private
+        syncNow();
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -66,7 +65,6 @@ public class Application {
         System.out.println("║     YT Music Sync - v1.0.0        ║");
         System.out.println("╚════════════════════════════════════╝");
 
-        // Verifica se yt-dlp está disponível
         AudioDownloader downloader = new YtDlpAudioDownloader(
                 config.getYtDlpPath(),
                 config.getAudioFormat(),
@@ -100,7 +98,6 @@ public class Application {
             System.out.println("╠════════════════════════════════════╣");
             System.out.println("║ SINCRONIZAÇÃO AUTOMÁTICA          ║");
 
-            // Exibe status da sincronização automática
             String[] statusLines = schedulerService.getStatusInfo().split("\n");
             for (String line : statusLines) {
                 System.out.printf("║ %-34s ║%n", line);
@@ -220,7 +217,6 @@ public class Application {
             return;
         }
 
-        // Recria o scheduler com o intervalo atualizado do config
         schedulerService = new SchedulerService(syncService, config.getCheckIntervalMinutes());
         schedulerService.start();
         setAutoSyncRunning(true);
@@ -272,7 +268,6 @@ public class Application {
                     config.setCheckIntervalMinutes(minutes);
                     System.out.println("✓ Intervalo atualizado para " + minutes + " minutos");
 
-                    // Se a sincronização automática estiver rodando, reinicia automaticamente
                     if (schedulerService.isRunning()) {
                         System.out.println("\n⚠ Sincronização automática ativa detectada");
                         System.out.print("Deseja reiniciar para aplicar o novo intervalo? (s/n): ");

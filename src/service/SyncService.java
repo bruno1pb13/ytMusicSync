@@ -40,14 +40,12 @@ public class SyncService {
     public Playlist addPlaylist(String playlistUrl) {
         String playlistId = playlistFetcher.extractPlaylistId(playlistUrl);
 
-        // Verifica se já existe
         Optional<Playlist> existing = playlistRepository.findById(playlistId);
         if (existing.isPresent()) {
             System.out.println("Playlist já existe: " + existing.get().getTitle());
             return existing.get();
         }
 
-        // Busca informações da playlist
         PlaylistFetcher.PlaylistInfo info = playlistFetcher.fetchPlaylistInfo(playlistUrl);
 
         Playlist playlist = new Playlist.Builder()
@@ -73,7 +71,6 @@ public class SyncService {
             return;
         }
 
-        // Remove vídeos associados
         List<Video> videos = videoRepository.findByPlaylistId(playlistId);
         for (Video video : videos) {
             videoRepository.delete(video.getId());
@@ -95,14 +92,12 @@ public class SyncService {
         Playlist playlist = playlistOpt.get();
         System.out.println("\n=== Sincronizando: " + playlist.getTitle() + " ===");
 
-        // Busca vídeos da playlist
         List<Video> fetchedVideos = playlistFetcher.fetchVideos(playlist.getUrl());
         System.out.println("Encontrados " + fetchedVideos.size() + " vídeos na playlist");
 
         int newVideos = 0;
         int downloaded = 0;
 
-        // Processa cada vídeo
         for (Video video : fetchedVideos) {
             if (!videoRepository.exists(video.getId())) {
                 videoRepository.save(video);
@@ -111,7 +106,6 @@ public class SyncService {
             }
         }
 
-        // Baixa vídeos pendentes
         List<Video> toDownload = videoRepository.findNotDownloadedByPlaylistId(playlistId);
         System.out.println("\n" + toDownload.size() + " vídeos para baixar");
 
@@ -124,7 +118,6 @@ public class SyncService {
             }
         }
 
-        // Atualiza informações da playlist
         Playlist updatedPlaylist = playlist.updateSyncTime(fetchedVideos.size());
         playlistRepository.save(updatedPlaylist);
 

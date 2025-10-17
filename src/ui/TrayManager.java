@@ -10,13 +10,12 @@ public class TrayManager {
     private final Application app;
     private TrayIcon trayIcon;
 
-    private final Image iconAutoOff; // ícone vermelho
-    private final Image iconAutoOn;  // ícone verde
+    private final Image iconAutoOff;
+    private final Image iconAutoOn;
 
     public TrayManager(Application app) {
         this.app = app;
 
-        // Criar ícones
         iconAutoOff = createIcon(Color.RED);
         iconAutoOn = createIcon(Color.GREEN);
 

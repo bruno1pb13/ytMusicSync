@@ -69,7 +69,7 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
     @Override
     public String extractPlaylistId(String playlistUrl) {
         // Padrões comuns de URL do YouTube
-        Pattern pattern = Pattern.compile("(?:list=)([a-zA-Z0-9_-]+)");
+        Pattern pattern = Pattern.compile("list=([a-zA-Z0-9_-]+)");
         Matcher matcher = pattern.matcher(playlistUrl);
 
         if (matcher.find()) {

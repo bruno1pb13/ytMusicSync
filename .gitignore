@@ -47,3 +47,4 @@ data/
 downloads/
 lib/
 *.log
+/.claude/

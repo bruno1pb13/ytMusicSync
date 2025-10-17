@@ -1,14 +1,18 @@
 # YT Music Sync
+
+![Tests](https://github.com/bruno1pb13/ytMusicSync/actions/workflows/pr-tests.yml/badge.svg)
+![CI](https://github.com/bruno1pb13/ytMusicSync/actions/workflows/ci.yml/badge.svg)
+
 Aplicação Java para sincronizar e baixar playlists do YouTube automaticamente usando yt-dlp.
 
 ## Características
 
-- **Sincronização automática**: Verifica periodicamente por novos vídeos
-- **Gerenciamento de playlists**: Adicione múltiplas playlists para monitorar
-- **Download de áudio**: Baixa apenas o áudio em formato configurável (MP3, M4A, etc)
-- **Rastreamento de progresso**: Mantém registro de vídeos já baixados
-- **Interface interativa**: Menu CLI intuitivo
-- **Configurável**: Personalize diretórios, intervalos e formatos
+- Sincronização automática de playlists do YouTube
+- Download de áudio em formatos configuráveis (MP3, M4A, OPUS)
+- Rastreamento de vídeos já baixados
+- Interface CLI interativa
+- Persistência em JSON
+- Configuração através de arquivo properties
 
 ## Arquitetura
 
@@ -94,48 +98,22 @@ O projeto possui 27 testes unitários cobrindo Domain, Repository e Service laye
 mvn test
 ```
 
-### CI/CD - GitHub Actions
+### CI/CD
 
-O projeto utiliza GitHub Actions para garantir qualidade do código:
-
-- **PR Tests** (`.github/workflows/pr-tests.yml`): Executa automaticamente em PRs para `main`
-  - ✅ Roda todos os testes unitários
-  - ✅ Gera relatório de testes
-  - ✅ Faz build do projeto
-  - ✅ Upload de artefatos (JAR e test reports)
-
-- **Continuous Integration** (`.github/workflows/ci.yml`): Executa em todos os pushes
-  - ✅ Valida projeto Maven
-  - ✅ Compila código
-  - ✅ Roda testes
-  - ✅ Verifica package
-  - ✅ Quality gate
-
-**Status Badges:**
-```markdown
-![Tests](https://github.com/seu-usuario/ytMusicSync/actions/workflows/pr-tests.yml/badge.svg)
-![CI](https://github.com/seu-usuario/ytMusicSync/actions/workflows/ci.yml/badge.svg)
-```
-
-### Boas Práticas Implementadas
-
-- **Arrange-Act-Assert (AAA)**: Estrutura clara dos testes
-- **DisplayName**: Descrições em português para melhor legibilidade
-- **Mocks com Mockito**: Isolamento de dependências nos testes de serviço
-- **Setup/Teardown**: Limpeza de arquivos de teste antes e depois
-- **Testes concisos**: Cada teste valida um comportamento específico
+- **PR Tests**: Executa testes unitários e build em pull requests
+- **Continuous Integration**: Valida compilação e testes em todos os pushes
 
 ## Uso
 
 ### Menu Principal
 
-1. **Adicionar Playlist**: Insira a URL de uma playlist do YouTube
-2. **Listar Playlists**: Visualize todas as playlists cadastradas com estatísticas
-3. **Remover Playlist**: Remove uma playlist e seus registros
-4. **Sincronizar Agora**: Executa sincronização manual
-5. **Iniciar Sinc. Automática**: Inicia verificações periódicas
-6. **Parar Sinc. Automática**: Para as verificações automáticas
-7. **Configurações**: Ajuste parâmetros da aplicação
+1. Adicionar Playlist
+2. Listar Playlists
+3. Remover Playlist
+4. Sincronizar Agora
+5. Iniciar Sincronização Automática
+6. Parar Sincronização Automática
+7. Configurações
 
 ### Configurações
 
@@ -153,37 +131,14 @@ Os dados são salvos em arquivos JSON:
 - `data/playlists.json`: Informações das playlists
 - `data/videos.json`: Registro de vídeos e status de download
 
-## Exemplo de Uso
+## Tecnologias
 
-```bash
-$ java -cp "lib/*:out" Main
-
-╔════════════════════════════════════╗
-║     YT Music Sync - v1.0.0        ║
-╚════════════════════════════════════╝
-
-✓ yt-dlp encontrado: 2024.04.09
-
-╔════════════════════════════════════╗
-║           MENU PRINCIPAL          ║
-╠════════════════════════════════════╣
-║ 1. Adicionar Playlist             ║
-║ 2. Listar Playlists               ║
-...
-```
-
-## Melhorias Futuras
-
-- [x] Adicionar testes unitários
-- [ ] Adicionar testes de integração
-- [ ] Implementar logging estruturado (SLF4J)
-- [ ] Suporte a banco de dados SQL
-- [ ] API REST para integração
-- [ ] Interface gráfica (JavaFX/Swing)
-- [ ] Retry logic para downloads falhados
-- [ ] Notificações (email, webhook)
-- [ ] Métricas e monitoring
-- [ ] Cobertura de código (JaCoCo)
+- Java 21
+- Maven
+- JUnit 5 + Mockito
+- Gson (JSON)
+- yt-dlp
+- GitHub Actions
 
 ## Licença
 

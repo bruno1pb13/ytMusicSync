@@ -13,7 +13,9 @@
       "Bash(echo:*)",
       "Bash(java:*)",
       "Bash(rm:*)",
-      "Bash(mvn clean compile:*)"
+      "Bash(mvn clean compile:*)",
+      "Read(//home/deck/.jdks/**)",
+      "Read(//usr/lib/**)"
     ],
     "deny": [],
     "ask": []

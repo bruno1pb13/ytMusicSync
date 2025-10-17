@@ -14,6 +14,7 @@ public class SchedulerService {
     private ScheduledExecutorService scheduler;
     private ScheduledFuture<?> scheduledTask;
     private volatile boolean running = false;
+    private volatile LocalDateTime lastRunAt = null;
 
     public SchedulerService(SyncService syncService, int intervalMinutes) {
         this.syncService = syncService;
@@ -37,7 +38,8 @@ public class SchedulerService {
 
         Runnable task = () -> {
             try {
-                String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                lastRunAt = LocalDateTime.now();
+                String timestamp = lastRunAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                 System.out.println("\n[" + timestamp + "] Iniciando sincronização automática...");
                 syncService.syncAllPlaylists();
             } catch (Exception e) {
@@ -99,5 +101,38 @@ public class SchedulerService {
      */
     public int getIntervalMinutes() {
         return intervalMinutes;
+    }
+
+    /**
+     * Retorna o timestamp da última execução.
+     */
+    public LocalDateTime getLastRunAt() {
+        return lastRunAt;
+    }
+
+    /**
+     * Retorna informações completas sobre o status do scheduler.
+     */
+    public String getStatusInfo() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Status: ");
+
+        if (running) {
+            sb.append("✓ ATIVA");
+        } else {
+            sb.append("○ INATIVA");
+        }
+
+        sb.append("\n");
+        sb.append("Intervalo: ").append(intervalMinutes).append(" minutos\n");
+
+        if (lastRunAt != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            sb.append("Última execução: ").append(lastRunAt.format(formatter));
+        } else {
+            sb.append("Última execução: Nunca executada");
+        }
+
+        return sb.toString();
     }
 }

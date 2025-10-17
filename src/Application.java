@@ -14,7 +14,7 @@ import java.util.Scanner;
 public class Application {
     private final Config config;
     private final SyncService syncService;
-    private final SchedulerService schedulerService;
+    private SchedulerService schedulerService;
     private final Scanner scanner;
 
     public Application() {
@@ -80,6 +80,15 @@ public class Application {
             System.out.println("║ 6. Parar Sinc. Automática         ║");
             System.out.println("║ 7. Configurações                  ║");
             System.out.println("║ 0. Sair                           ║");
+            System.out.println("╠════════════════════════════════════╣");
+            System.out.println("║ SINCRONIZAÇÃO AUTOMÁTICA          ║");
+
+            // Exibe status da sincronização automática
+            String[] statusLines = schedulerService.getStatusInfo().split("\n");
+            for (String line : statusLines) {
+                System.out.printf("║ %-34s ║%n", line);
+            }
+
             System.out.println("╚════════════════════════════════════╝");
             System.out.print("\nEscolha uma opção: ");
 
@@ -195,6 +204,8 @@ public class Application {
             return;
         }
 
+        // Recria o scheduler com o intervalo atualizado do config
+        schedulerService = new SchedulerService(syncService, config.getCheckIntervalMinutes());
         schedulerService.start();
     }
 
@@ -210,10 +221,11 @@ public class Application {
     private void showSettings() {
         config.displayConfig();
 
-        System.out.println("1. Alterar diretório de downloads");
+        System.out.println("\n1. Alterar diretório de downloads");
         System.out.println("2. Alterar intervalo de verificação");
         System.out.println("3. Alterar caminho yt-dlp");
         System.out.println("4. Alterar formato de áudio");
+        System.out.println("5. Alterar qualidade de áudio");
         System.out.println("0. Voltar");
         System.out.print("\nEscolha: ");
 
@@ -229,10 +241,35 @@ public class Application {
                 System.out.print("Novo intervalo (minutos): ");
                 try {
                     int minutes = Integer.parseInt(scanner.nextLine().trim());
+                    if (minutes < 1) {
+                        System.out.println("✗ Intervalo deve ser no mínimo 1 minuto");
+                        return;
+                    }
                     config.setCheckIntervalMinutes(minutes);
-                    System.out.println("✓ Atualizado (reinicie a sinc. automática para aplicar)");
+                    System.out.println("✓ Intervalo atualizado para " + minutes + " minutos");
+
+                    // Se a sincronização automática estiver rodando, reinicia automaticamente
+                    if (schedulerService.isRunning()) {
+                        System.out.println("\n⚠ Sincronização automática ativa detectada");
+                        System.out.print("Deseja reiniciar para aplicar o novo intervalo? (s/n): ");
+                        String restart = scanner.nextLine().trim();
+                        if (restart.equalsIgnoreCase("s")) {
+                            System.out.println("Reiniciando sincronização automática...");
+                            schedulerService.stop();
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                            schedulerService = new SchedulerService(syncService, minutes);
+                            schedulerService.start();
+                            System.out.println("✓ Sincronização reiniciada com novo intervalo!");
+                        } else {
+                            System.out.println("✓ O novo intervalo será aplicado no próximo início.");
+                        }
+                    }
                 } catch (NumberFormatException e) {
-                    System.out.println("Valor inválido");
+                    System.out.println("✗ Valor inválido. Digite apenas números.");
                 }
             }
             case "3" -> {
@@ -242,8 +279,28 @@ public class Application {
             }
             case "4" -> {
                 System.out.print("Novo formato (mp3/m4a/opus): ");
-                config.setAudioFormat(scanner.nextLine().trim());
-                System.out.println("✓ Atualizado");
+                String format = scanner.nextLine().trim().toLowerCase();
+                if (format.equals("mp3") || format.equals("m4a") || format.equals("opus")) {
+                    config.setAudioFormat(format);
+                    System.out.println("✓ Formato atualizado para " + format);
+                } else {
+                    System.out.println("✗ Formato inválido. Use: mp3, m4a ou opus");
+                }
+            }
+            case "5" -> {
+                System.out.print("Nova qualidade (kbps, ex: 128, 192, 256, 320): ");
+                String quality = scanner.nextLine().trim();
+                try {
+                    int qualityNum = Integer.parseInt(quality);
+                    if (qualityNum < 64 || qualityNum > 320) {
+                        System.out.println("✗ Qualidade deve estar entre 64 e 320 kbps");
+                        return;
+                    }
+                    config.setAudioQuality(quality);
+                    System.out.println("✓ Qualidade atualizada para " + quality + "kbps");
+                } catch (NumberFormatException e) {
+                    System.out.println("✗ Valor inválido. Digite apenas números.");
+                }
             }
         }
     }

@@ -1,8 +1,13 @@
+package application;
+
 import adapter.*;
 import domain.Playlist;
 import repository.*;
 import service.*;
 import util.Config;
+
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 
 import java.util.List;
 import java.util.Scanner;
@@ -16,6 +21,10 @@ public class Application {
     private final SyncService syncService;
     private SchedulerService schedulerService;
     private final Scanner scanner;
+
+
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+    private boolean autoSyncRunning;
 
     public Application() {
         this.config = new Config();
@@ -42,6 +51,14 @@ public class Application {
         );
 
         this.schedulerService = new SchedulerService(syncService, config.getCheckIntervalMinutes());
+    }
+
+    public void triggerSyncNow() {
+        syncNow(); // chama o private
+    }
+
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        pcs.addPropertyChangeListener(listener);
     }
 
     public void start() {
@@ -207,6 +224,7 @@ public class Application {
         // Recria o scheduler com o intervalo atualizado do config
         schedulerService = new SchedulerService(syncService, config.getCheckIntervalMinutes());
         schedulerService.start();
+        setAutoSyncRunning(true);
     }
 
     private void stopAutoSync() {
@@ -216,6 +234,13 @@ public class Application {
         }
 
         schedulerService.stop();
+        setAutoSyncRunning(false);
+    }
+
+    private void setAutoSyncRunning(boolean running) {
+        boolean old = this.autoSyncRunning;
+        this.autoSyncRunning = running;
+        pcs.firePropertyChange("autoSyncRunning", old, running);
     }
 
     private void showSettings() {

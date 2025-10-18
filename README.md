@@ -7,12 +7,15 @@ Aplicação Java para sincronizar e baixar playlists do YouTube automaticamente 
 
 ## Características
 
-- Sincronização automática de playlists do YouTube
-- Download de áudio em formatos configuráveis (MP3, M4A, OPUS)
-- Rastreamento de vídeos já baixados
-- Interface CLI interativa
-- Persistência em JSON
-- Configuração através de arquivo properties
+- 🖥️ **Interface Gráfica** com Swing
+- 🔄 **Sincronização automática** de playlists do YouTube
+- 📥 **Download de áudio** em formatos configuráveis (MP3, M4A, OPUS)
+- 📊 **Rastreamento de vídeos** já baixados
+- 🎯 **Interface CLI interativa** (modo alternativo)
+- 💾 **Persistência em JSON**
+- ⚙️ **Configuração** através de arquivo properties
+- 🏗️ **Arquitetura SOLID** - código limpo e manutenível
+
 
 ## Arquitetura
 
@@ -34,9 +37,14 @@ src/
 ├── service/             # Lógica de negócio
 │   ├── SyncService.java
 │   └── SchedulerService.java
+├── ui/                  # Interface Gráfica (seguindo SOLID)
+│   ├── UIManager.java       # Gerenciador da UI
+│   ├── MainWindow.java      # Janela principal
+│   └── TrayManager.java     # @Deprecated - não usar
 ├── util/                # Utilitários
 │   └── Config.java
-├── Application.java     # Camada de aplicação
+├── application/         # Camada de aplicação
+│   └── Application.java
 └── Main.java           # Ponto de entrada
 
 test/
@@ -49,7 +57,6 @@ test/
 └── service/             # Testes de lógica de negócio
     └── SyncServiceTest.java
 ```
-
 
 ## Pré-requisitos
 
@@ -66,6 +73,7 @@ test/
 2. Abra o projeto no IntelliJ IDEA
 3. A IDE detectará automaticamente o `pom.xml` e baixará as dependências
 4. Execute clicando no botão ▶️ ao lado do método `main` em `Main.java`
+5. A interface gráfica será exibida automaticamente
 
 ### Usando Maven (Linha de Comando)
 
@@ -88,8 +96,6 @@ java -jar target/ytMusicSync-1.0.0.jar
 
 ## Testes
 
-O projeto possui 27 testes unitários cobrindo Domain, Repository e Service layers. Veja [TESTING.md](TESTING.md) para detalhes completos.
-
 **Via IntelliJ IDEA:**
 - Clique com botão direito na pasta `test` → Run 'All Tests'
 
@@ -105,41 +111,39 @@ mvn test
 
 ## Uso
 
-### Menu Principal
-
-1. Adicionar Playlist
-2. Listar Playlists
-3. Remover Playlist
-4. Sincronizar Agora
-5. Iniciar Sincronização Automática
-6. Parar Sincronização Automática
-7. Configurações
-
 ### Configurações
 
 O arquivo `config.properties` permite personalizar:
 
 - `download.directory`: Diretório de destino dos downloads
-- `check.interval.minutes`: Intervalo entre verificações automáticas
-- `yt-dlp.path`: Caminho para o executável yt-dlp
-- `audio.format`: Formato de áudio (mp3, m4a, opus)
-- `audio.quality`: Qualidade do áudio em kbps
+- `check.interval.minutes`: Intervalo entre verificações automáticas (padrão: 60 minutos)
+- `yt-dlp.path`: Caminho para o executável yt-dlp (padrão: yt-dlp)
+- `audio.format`: Formato de áudio - mp3, m4a ou opus (padrão: mp3)
+- `audio.quality`: Qualidade do áudio em kbps (padrão: 192)
 
 ### Persistência
 
-Os dados são salvos em arquivos JSON:
+Os dados são salvos automaticamente em arquivos JSON:
 - `data/playlists.json`: Informações das playlists
 - `data/videos.json`: Registro de vídeos e status de download
 
 ## Tecnologias
 
-- Java 21
-- Maven
-- JUnit 5 + Mockito
-- Gson (JSON)
-- yt-dlp
-- GitHub Actions
+- **Java 21** - Linguagem principal
+- **Maven** - Gerenciamento de dependências e build
+- **Swing/AWT** - Interface gráfica nativa
+- **JUnit 5** - Framework de testes
+- **Mockito** - Mocking para testes
+- **Gson** - Serialização/deserialização JSON
+- **yt-dlp** - Download de vídeos/áudio do YouTube
+- **GitHub Actions** - CI/CD
+
+## Roadmap
+
+- [ ] Adicionar estatísticas detalhadas de downloads
+- [ ] Suporte para exportação de relatórios
 
 ## Licença
 
 MIT License
+Desenvolvido com ☕ e Java

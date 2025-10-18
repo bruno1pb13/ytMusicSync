@@ -25,6 +25,7 @@ public class Application {
 
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private boolean autoSyncRunning;
+    private boolean syncInProgress;
 
     public Application() {
         this.config = new Config();
@@ -53,11 +54,70 @@ public class Application {
     }
 
     public void triggerSyncNow() {
-        syncNow();
+        setSyncInProgress(true);
+        try {
+            syncService.syncAllPlaylists();
+        } finally {
+            setSyncInProgress(false);
+        }
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(listener);
+    }
+
+    public boolean isAutoSyncRunning() {
+        return autoSyncRunning;
+    }
+
+    public List<Playlist> getPlaylists() {
+        return syncService.listPlaylists();
+    }
+
+    public SyncService.PlaylistStats getPlaylistStats(String playlistId) {
+        return syncService.getPlaylistStats(playlistId);
+    }
+
+    public Playlist addPlaylist(String url) {
+        Playlist playlist = syncService.addPlaylist(url);
+        pcs.firePropertyChange("playlistsChanged", null, playlist);
+        return playlist;
+    }
+
+    public void removePlaylist(String playlistId) {
+        syncService.removePlaylist(playlistId);
+        pcs.firePropertyChange("playlistsChanged", playlistId, null);
+    }
+
+    public void syncPlaylist(String playlistId) {
+        setSyncInProgress(true);
+        try {
+            syncService.syncPlaylist(playlistId);
+        } finally {
+            setSyncInProgress(false);
+        }
+    }
+
+    public void startAutoSync() {
+        if (!schedulerService.isRunning()) {
+            schedulerService = new SchedulerService(syncService, config.getCheckIntervalMinutes());
+            schedulerService.start();
+            setAutoSyncRunning(true);
+        }
+    }
+
+    public void stopAutoSync() {
+        if (schedulerService.isRunning()) {
+            schedulerService.stop();
+            setAutoSyncRunning(false);
+        }
+    }
+
+    public void shutdown() {
+        if (schedulerService.isRunning()) {
+            schedulerService.stop();
+        }
+        scanner.close();
     }
 
     public void start() {
@@ -110,12 +170,12 @@ public class Application {
 
             try {
                 switch (choice) {
-                    case "1" -> addPlaylist();
+                    case "1" -> addPlaylistMenu();
                     case "2" -> listPlaylists();
-                    case "3" -> removePlaylist();
-                    case "4" -> syncNow();
-                    case "5" -> startAutoSync();
-                    case "6" -> stopAutoSync();
+                    case "3" -> removePlaylistMenu();
+                    case "4" -> syncNowMenu();
+                    case "5" -> startAutoSyncMenu();
+                    case "6" -> stopAutoSyncMenu();
                     case "7" -> showSettings();
                     case "0" -> {
                         exit();
@@ -129,7 +189,7 @@ public class Application {
         }
     }
 
-    private void addPlaylist() {
+    private void addPlaylistMenu() {
         System.out.print("\nURL da playlist: ");
         String url = scanner.nextLine().trim();
 
@@ -138,12 +198,12 @@ public class Application {
             return;
         }
 
-        Playlist playlist = syncService.addPlaylist(url);
+        Playlist playlist = addPlaylist(url);
         System.out.println("\n✓ Playlist adicionada: " + playlist.getTitle());
         System.out.print("\nDeseja sincronizar agora? (s/n): ");
 
         if (scanner.nextLine().trim().equalsIgnoreCase("s")) {
-            syncService.syncPlaylist(playlist.getId());
+            syncPlaylist(playlist.getId());
         }
     }
 
@@ -175,17 +235,17 @@ public class Application {
         System.out.println("╚════════════════════════════════════════════════════════════╝");
     }
 
-    private void removePlaylist() {
+    private void removePlaylistMenu() {
         listPlaylists();
         System.out.print("\nID da playlist para remover: ");
         String id = scanner.nextLine().trim();
 
         if (!id.isEmpty()) {
-            syncService.removePlaylist(id);
+            removePlaylist(id);
         }
     }
 
-    private void syncNow() {
+    private void syncNowMenu() {
         List<Playlist> playlists = syncService.listPlaylists();
 
         if (playlists.isEmpty()) {
@@ -200,42 +260,50 @@ public class Application {
         String choice = scanner.nextLine().trim();
 
         if (choice.equals("1")) {
-            syncService.syncAllPlaylists();
+            setSyncInProgress(true);
+            try {
+                syncService.syncAllPlaylists();
+            } finally {
+                setSyncInProgress(false);
+            }
         } else if (choice.equals("2")) {
             listPlaylists();
             System.out.print("\nID da playlist: ");
             String id = scanner.nextLine().trim();
             if (!id.isEmpty()) {
-                syncService.syncPlaylist(id);
+                syncPlaylist(id);
             }
         }
     }
 
-    private void startAutoSync() {
+    private void startAutoSyncMenu() {
         if (schedulerService.isRunning()) {
             System.out.println("\nSincronização automática já está rodando");
             return;
         }
 
-        schedulerService = new SchedulerService(syncService, config.getCheckIntervalMinutes());
-        schedulerService.start();
-        setAutoSyncRunning(true);
+        startAutoSync();
     }
 
-    private void stopAutoSync() {
+    private void stopAutoSyncMenu() {
         if (!schedulerService.isRunning()) {
             System.out.println("\nSincronização automática não está rodando");
             return;
         }
 
-        schedulerService.stop();
-        setAutoSyncRunning(false);
+        stopAutoSync();
     }
 
     private void setAutoSyncRunning(boolean running) {
         boolean old = this.autoSyncRunning;
         this.autoSyncRunning = running;
         pcs.firePropertyChange("autoSyncRunning", old, running);
+    }
+
+    private void setSyncInProgress(boolean syncing) {
+        boolean old = this.syncInProgress;
+        this.syncInProgress = syncing;
+        pcs.firePropertyChange("syncInProgress", old, syncing);
     }
 
     private void showSettings() {
@@ -326,10 +394,7 @@ public class Application {
 
     private void exit() {
         System.out.println("\nEncerrando...");
-        if (schedulerService.isRunning()) {
-            schedulerService.stop();
-        }
-        scanner.close();
+        shutdown();
         System.out.println("Até logo!");
     }
 

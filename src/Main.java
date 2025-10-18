@@ -7,14 +7,17 @@
  */
 
 import application.Application;
-import ui.TrayManager;
+import ui.UIManager;
 
 public class Main {
     public static void main(String[] args) {
         Application app = new Application();
-        new TrayManager(app).initTray();
 
+        // Inicializa a interface gráfica
+        UIManager uiManager = new UIManager(app);
+        uiManager.initialize();
+
+        // Inicia a aplicação (modo CLI em background)
         app.start();
-
     }
 }

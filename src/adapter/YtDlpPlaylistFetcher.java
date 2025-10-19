@@ -68,15 +68,13 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
 
     @Override
     public String extractPlaylistId(String playlistUrl) {
-        // Padrões comuns de URL do YouTube
-        Pattern pattern = Pattern.compile("(?:list=)([a-zA-Z0-9_-]+)");
+        Pattern pattern = Pattern.compile("list=([a-zA-Z0-9_-]+)");
         Matcher matcher = pattern.matcher(playlistUrl);
 
         if (matcher.find()) {
             return matcher.group(1);
         }
 
-        // Se não encontrar, usa a URL completa como ID
         return Integer.toHexString(playlistUrl.hashCode());
     }
 
@@ -127,7 +125,6 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
         String title = obj.has("title") ? obj.get("title").getAsString() : "Sem título";
         String url = obj.has("url") ? obj.get("url").getAsString() : "";
 
-        // Se a URL não for completa, constrói a URL do YouTube
         if (!url.startsWith("http")) {
             url = "https://www.youtube.com/watch?v=" + id;
         }
@@ -138,7 +135,6 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
                 .url(url)
                 .playlistId(playlistId);
 
-        // Parseia data de publicação se disponível
         if (obj.has("upload_date")) {
             try {
                 String uploadDate = obj.get("upload_date").getAsString();

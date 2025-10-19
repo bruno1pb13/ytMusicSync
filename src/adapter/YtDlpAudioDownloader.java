@@ -22,11 +22,9 @@ public class YtDlpAudioDownloader implements AudioDownloader {
     @Override
     public boolean download(Video video, String outputDirectory) {
         try {
-            // Cria diretório se não existir
             Path outputPath = Paths.get(outputDirectory);
             Files.createDirectories(outputPath);
 
-            // Template de saída: Playlist/Nome do vídeo
             String outputTemplate = outputDirectory + "/%(title)s.%(ext)s";
 
             ProcessBuilder pb = new ProcessBuilder(
@@ -46,7 +44,6 @@ public class YtDlpAudioDownloader implements AudioDownloader {
 
             Process process = pb.start();
 
-            // Captura saída para feedback
             Thread outputThread = new Thread(() -> {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                     String line;

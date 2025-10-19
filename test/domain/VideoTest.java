@@ -12,10 +12,8 @@ class VideoTest {
     @Test
     @DisplayName("Deve criar vídeo com builder e validar propriedades obrigatórias")
     void shouldCreateVideoWithBuilderAndValidateRequiredFields() {
-        // Arrange
         LocalDateTime now = LocalDateTime.now();
 
-        // Act
         Video video = new Video.Builder()
                 .id("video123")
                 .title("Test Video")
@@ -24,7 +22,6 @@ class VideoTest {
                 .playlistId("playlist123")
                 .build();
 
-        // Assert
         assertEquals("video123", video.getId());
         assertEquals("Test Video", video.getTitle());
         assertEquals("https://youtube.com/watch?v=test", video.getUrl());
@@ -37,7 +34,6 @@ class VideoTest {
     @Test
     @DisplayName("Deve lançar exceção quando campos obrigatórios forem nulos")
     void shouldThrowExceptionWhenRequiredFieldsAreNull() {
-        // ID nulo
         assertThrows(NullPointerException.class, () ->
             new Video.Builder()
                 .title("Test")
@@ -46,7 +42,6 @@ class VideoTest {
                 .build()
         );
 
-        // Título nulo
         assertThrows(NullPointerException.class, () ->
             new Video.Builder()
                 .id("video123")
@@ -55,7 +50,6 @@ class VideoTest {
                 .build()
         );
 
-        // URL nula
         assertThrows(NullPointerException.class, () ->
             new Video.Builder()
                 .id("video123")
@@ -64,7 +58,6 @@ class VideoTest {
                 .build()
         );
 
-        // PlaylistId nulo
         assertThrows(NullPointerException.class, () ->
             new Video.Builder()
                 .id("video123")
@@ -77,7 +70,6 @@ class VideoTest {
     @Test
     @DisplayName("Deve marcar vídeo como baixado mantendo imutabilidade")
     void shouldMarkVideoAsDownloadedMaintainingImmutability() {
-        // Arrange
         Video originalVideo = new Video.Builder()
                 .id("video123")
                 .title("Test Video")
@@ -85,29 +77,23 @@ class VideoTest {
                 .playlistId("playlist123")
                 .build();
 
-        // Act
         Video downloadedVideo = originalVideo.markAsDownloaded();
 
-        // Assert - Original permanece inalterado
         assertFalse(originalVideo.isDownloaded());
         assertNull(originalVideo.getDownloadedAt());
 
-        // Novo objeto está marcado como baixado
         assertTrue(downloadedVideo.isDownloaded());
         assertNotNull(downloadedVideo.getDownloadedAt());
 
-        // Outros campos mantidos
         assertEquals(originalVideo.getId(), downloadedVideo.getId());
         assertEquals(originalVideo.getTitle(), downloadedVideo.getTitle());
 
-        // Objetos diferentes
         assertNotSame(originalVideo, downloadedVideo);
     }
 
     @Test
     @DisplayName("Deve comparar vídeos por ID (equals e hashCode)")
     void shouldCompareVideosByIdEqualsAndHashCode() {
-        // Arrange
         Video video1 = new Video.Builder()
                 .id("video123")
                 .title("Title 1")
@@ -129,11 +115,9 @@ class VideoTest {
                 .playlistId("playlist123")
                 .build();
 
-        // Assert - Mesmo ID = iguais
         assertEquals(video1, video2);
         assertEquals(video1.hashCode(), video2.hashCode());
 
-        // ID diferente = diferentes
         assertNotEquals(video1, video3);
     }
 }

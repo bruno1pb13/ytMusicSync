@@ -4,7 +4,6 @@ import domain.Video;
 
 /**
  * Interface para download de áudio.
- * Abstração permite trocar implementação (yt-dlp, youtube-dl, etc).
  */
 public interface AudioDownloader {
     /**

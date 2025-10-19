@@ -34,19 +34,8 @@ public class Application {
         PlaylistRepository playlistRepository = new JsonPlaylistRepository();
         VideoRepository videoRepository = new JsonVideoRepository();
 
-        PlaylistFetcher playlistFetcher = new YtDlpPlaylistFetcher(
-                config.getYtDlpPath(),
-                config.getCookiesEnabled(),
-                config.getCookiesBrowser()
-        );
-
-        AudioDownloader audioDownloader = new YtDlpAudioDownloader(
-                config.getYtDlpPath(),
-                config.getAudioFormat(),
-                config.getAudioQuality(),
-                config.getCookiesEnabled(),
-                config.getCookiesBrowser()
-        );
+        PlaylistFetcher playlistFetcher = new YtDlpPlaylistFetcher(config);
+        AudioDownloader audioDownloader = new YtDlpAudioDownloader(config);
 
         this.syncService = new SyncService(
                 playlistRepository,
@@ -139,13 +128,7 @@ public class Application {
         System.out.println("║     YT Music Sync - v1.0.0        ║");
         System.out.println("╚════════════════════════════════════╝");
 
-        AudioDownloader downloader = new YtDlpAudioDownloader(
-                config.getYtDlpPath(),
-                config.getAudioFormat(),
-                config.getAudioQuality(),
-                config.getCookiesEnabled(),
-                config.getCookiesBrowser()
-        );
+        AudioDownloader downloader = new YtDlpAudioDownloader(config);
 
         if (!downloader.isAvailable()) {
             System.err.println("\n⚠ AVISO: yt-dlp não encontrado!");
@@ -339,6 +322,8 @@ public class Application {
         System.out.println("3. Alterar caminho yt-dlp");
         System.out.println("4. Alterar formato de áudio");
         System.out.println("5. Alterar qualidade de áudio");
+        System.out.println("6. Habilitar/Desabilitar cookies do navegador");
+        System.out.println("7. Selecionar navegador para cookies");
         System.out.println("0. Voltar");
         System.out.print("\nEscolha: ");
 
@@ -412,6 +397,66 @@ public class Application {
                     System.out.println("✓ Qualidade atualizada para " + quality + "kbps");
                 } catch (NumberFormatException e) {
                     System.out.println("✗ Valor inválido. Digite apenas números.");
+                }
+            }
+            case "6" -> {
+                System.out.println("\nAcesso a playlists privadas:");
+                System.out.println("Situação atual: " + (config.getCookiesEnabled() ? "HABILITADO" : "DESABILITADO"));
+                System.out.print("\nDeseja " + (config.getCookiesEnabled() ? "desabilitar" : "habilitar") + " cookies do navegador? (s/n): ");
+                String response = scanner.nextLine().trim().toLowerCase();
+
+                if (response.equals("s")) {
+                    boolean newValue = !config.getCookiesEnabled();
+                    config.setCookiesEnabled(newValue);
+                    System.out.println("✓ Cookies do navegador " + (newValue ? "HABILITADOS" : "DESABILITADOS"));
+
+                    if (newValue) {
+                        System.out.println("\n⚠ IMPORTANTE:");
+                        System.out.println("- Certifique-se de que o navegador selecionado está logado no YouTube");
+                        System.out.println("- Navegador atual: " + config.getCookiesBrowser());
+                        System.out.println("- Use a opção 7 para alterar o navegador se necessário");
+                    }
+                } else {
+                    System.out.println("Operação cancelada");
+                }
+            }
+            case "7" -> {
+                System.out.println("\nNavegadores disponíveis:");
+                System.out.println("1. Chrome");
+                System.out.println("2. Firefox");
+                System.out.println("3. Edge");
+                System.out.println("4. Safari");
+                System.out.println("5. Opera");
+                System.out.println("6. Brave");
+                System.out.println("7. Chromium");
+                System.out.println("\nNavegador atual: " + config.getCookiesBrowser());
+                System.out.print("\nEscolha o navegador (1-7): ");
+
+                String browserChoice = scanner.nextLine().trim();
+                String[] browsers = {"chrome", "firefox", "edge", "safari", "opera", "brave", "chromium"};
+
+                try {
+                    int index = Integer.parseInt(browserChoice) - 1;
+                    if (index >= 0 && index < browsers.length) {
+                        config.setCookiesBrowser(browsers[index]);
+                        System.out.println("✓ Navegador alterado para: " + browsers[index]);
+
+                        if (!config.getCookiesEnabled()) {
+                            System.out.println("\n⚠ ATENÇÃO: Os cookies estão DESABILITADOS");
+                            System.out.print("Deseja habilitar cookies agora? (s/n): ");
+                            String enable = scanner.nextLine().trim().toLowerCase();
+                            if (enable.equals("s")) {
+                                config.setCookiesEnabled(true);
+                                System.out.println("✓ Cookies habilitados!");
+                            }
+                        } else {
+                            System.out.println("✓ Certifique-se de que o " + browsers[index] + " está logado no YouTube");
+                        }
+                    } else {
+                        System.out.println("✗ Opção inválida. Escolha entre 1 e 7");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("✗ Valor inválido. Digite apenas números de 1 a 7");
                 }
             }
         }

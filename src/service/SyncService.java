@@ -4,6 +4,7 @@ import adapter.AudioDownloader;
 import adapter.PlaylistFetcher;
 import domain.Playlist;
 import domain.Video;
+import exception.PrivatePlaylistException;
 import repository.PlaylistRepository;
 import repository.VideoRepository;
 
@@ -12,7 +13,6 @@ import java.util.Optional;
 
 /**
  * Serviço responsável pela sincronização de playlists.
- * Segue o princípio de Single Responsibility (SOLID).
  */
 public class SyncService {
     private final PlaylistRepository playlistRepository;
@@ -34,9 +34,6 @@ public class SyncService {
         this.downloadDirectory = downloadDirectory;
     }
 
-    /**
-     * Adiciona uma nova playlist ao sistema.
-     */
     public Playlist addPlaylist(String playlistUrl) {
         String playlistId = playlistFetcher.extractPlaylistId(playlistUrl);
 
@@ -58,12 +55,20 @@ public class SyncService {
         playlistRepository.save(playlist);
         System.out.println("✓ Playlist adicionada: " + playlist.getTitle());
 
+        // Verifica se a playlist é acessível tentando buscar os vídeos
+        System.out.println("Verificando acessibilidade da playlist...");
+        try {
+            List<Video> videos = playlistFetcher.fetchVideos(playlistUrl);
+            System.out.println("✓ Playlist verificada: " + videos.size() + " música(s) encontrada(s)");
+        } catch (PrivatePlaylistException e) {
+            // Remove a playlist que foi adicionada, já que não é acessível
+            playlistRepository.delete(playlistId);
+            throw e; // Re-lança a exceção para que a UI possa tratar
+        }
+
         return playlist;
     }
 
-    /**
-     * Remove uma playlist do sistema.
-     */
     public void removePlaylist(String playlistId) {
         Optional<Playlist> playlist = playlistRepository.findById(playlistId);
         if (playlist.isEmpty()) {
@@ -80,9 +85,6 @@ public class SyncService {
         System.out.println("✓ Playlist removida: " + playlist.get().getTitle());
     }
 
-    /**
-     * Sincroniza uma playlist específica.
-     */
     public SyncResult syncPlaylist(String playlistId) {
         Optional<Playlist> playlistOpt = playlistRepository.findById(playlistId);
         if (playlistOpt.isEmpty()) {
@@ -125,9 +127,6 @@ public class SyncService {
         return new SyncResult(newVideos, downloaded, "Sucesso");
     }
 
-    /**
-     * Sincroniza todas as playlists.
-     */
     public void syncAllPlaylists() {
         List<Playlist> playlists = playlistRepository.findAll();
 
@@ -159,9 +158,6 @@ public class SyncService {
         return playlistRepository.findAll();
     }
 
-    /**
-     * Obtém estatísticas de uma playlist.
-     */
     public PlaylistStats getPlaylistStats(String playlistId) {
         Optional<Playlist> playlist = playlistRepository.findById(playlistId);
         if (playlist.isEmpty()) {

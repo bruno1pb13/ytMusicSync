@@ -6,7 +6,6 @@ import javax.swing.*;
 
 /**
  * Gerenciador da interface gráfica da aplicação.
- * Segue o Single Responsibility Principle: responsável apenas por inicializar e coordenar a UI.
  */
 public class UIManager {
 

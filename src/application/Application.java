@@ -124,7 +124,11 @@ public class Application {
         scanner.close();
     }
 
-    public void start() {
+    /**
+     * Inicia a aplicação em modo CLI (Command Line Interface).
+     * Exibe o menu interativo no terminal.
+     */
+    public void startCli() {
         System.out.println("╔════════════════════════════════════╗");
         System.out.println("║     YT Music Sync - v1.0.0        ║");
         System.out.println("╚════════════════════════════════════╝");
@@ -144,6 +148,15 @@ public class Application {
         }
 
         showMenu();
+    }
+
+    /**
+     * @deprecated Use startCli() para iniciar modo CLI.
+     * Mantido para compatibilidade.
+     */
+    @Deprecated
+    public void start() {
+        startCli();
     }
 
     private void showMenu() {

@@ -31,6 +31,24 @@ mvn clean package
 java -jar target/ytMusicSync-1.0.0.jar
 ```
 
+### Modos de Execução
+
+A aplicação suporta dois modos de execução:
+
+**Interface Gráfica (padrão)**
+```bash
+java -jar target/ytMusicSync-1.0.0.jar
+```
+- Inicia automaticamente a interface gráfica
+- Fallback automático para CLI se GUI não estiver disponível (ambiente headless)
+
+**Modo CLI**
+```bash
+java -jar target/ytMusicSync-1.0.0.jar --cli
+```
+- Força o modo linha de comando
+- Útil para servidores ou ambientes sem interface gráfica
+
 ## Testes
 
 ```bash

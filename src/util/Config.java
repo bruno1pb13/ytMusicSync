@@ -37,6 +37,8 @@ public class Config {
         properties.setProperty("yt-dlp.path", "yt-dlp");
         properties.setProperty("audio.format", "mp3");
         properties.setProperty("audio.quality", "320");
+        properties.setProperty("cookies.enabled", "false");
+        properties.setProperty("cookies.browser", "chrome");
         saveConfig();
         System.out.println("✓ Configuração padrão criada");
     }
@@ -94,6 +96,24 @@ public class Config {
         saveConfig();
     }
 
+    public boolean getCookiesEnabled() {
+        return Boolean.parseBoolean(properties.getProperty("cookies.enabled", "false"));
+    }
+
+    public void setCookiesEnabled(boolean enabled) {
+        properties.setProperty("cookies.enabled", String.valueOf(enabled));
+        saveConfig();
+    }
+
+    public String getCookiesBrowser() {
+        return properties.getProperty("cookies.browser", "chrome");
+    }
+
+    public void setCookiesBrowser(String browser) {
+        properties.setProperty("cookies.browser", browser);
+        saveConfig();
+    }
+
     public void displayConfig() {
         System.out.println("\n=== Configurações ===");
         System.out.println("Diretório de downloads: " + getDownloadDirectory());
@@ -101,6 +121,8 @@ public class Config {
         System.out.println("Caminho yt-dlp: " + getYtDlpPath());
         System.out.println("Formato de áudio: " + getAudioFormat());
         System.out.println("Qualidade de áudio: " + getAudioQuality() + "kbps");
+        System.out.println("Cookies habilitados: " + (getCookiesEnabled() ? "Sim" : "Não"));
+        System.out.println("Navegador para cookies: " + getCookiesBrowser());
         System.out.println();
     }
 }

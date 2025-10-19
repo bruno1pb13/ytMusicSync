@@ -16,10 +16,14 @@ import java.util.regex.*;
 public class YtDlpPlaylistFetcher implements PlaylistFetcher {
     private final String ytDlpPath;
     private final Gson gson;
+    private final boolean cookiesEnabled;
+    private final String cookiesBrowser;
 
-    public YtDlpPlaylistFetcher(String ytDlpPath) {
+    public YtDlpPlaylistFetcher(String ytDlpPath, boolean cookiesEnabled, String cookiesBrowser) {
         this.ytDlpPath = ytDlpPath;
         this.gson = new GsonBuilder().create();
+        this.cookiesEnabled = cookiesEnabled;
+        this.cookiesBrowser = cookiesBrowser;
     }
 
     @Override
@@ -28,12 +32,17 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
         String playlistId = extractPlaylistId(playlistUrl);
 
         try {
-            ProcessBuilder pb = new ProcessBuilder(
-                    ytDlpPath,
-                    "--flat-playlist",
-                    "--dump-json",
-                    playlistUrl
-            );
+            List<String> command = new ArrayList<>();
+            command.add(ytDlpPath);
+            command.add("--flat-playlist");
+            command.add("--dump-json");
+            if (cookiesEnabled) {
+                command.add("--cookies-from-browser");
+                command.add(cookiesBrowser);
+            }
+            command.add(playlistUrl);
+
+            ProcessBuilder pb = new ProcessBuilder(command);
 
             Process process = pb.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -81,13 +90,19 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
     @Override
     public PlaylistInfo fetchPlaylistInfo(String playlistUrl) {
         try {
-            ProcessBuilder pb = new ProcessBuilder(
-                    ytDlpPath,
-                    "--flat-playlist",
-                    "--dump-json",
-                    "--playlist-end", "1",
-                    playlistUrl
-            );
+            List<String> command = new ArrayList<>();
+            command.add(ytDlpPath);
+            command.add("--flat-playlist");
+            command.add("--dump-json");
+            command.add("--playlist-end");
+            command.add("1");
+            if (cookiesEnabled) {
+                command.add("--cookies-from-browser");
+                command.add(cookiesBrowser);
+            }
+            command.add(playlistUrl);
+
+            ProcessBuilder pb = new ProcessBuilder(command);
 
             Process process = pb.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));

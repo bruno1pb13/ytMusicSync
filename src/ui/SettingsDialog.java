@@ -23,6 +23,8 @@ public class SettingsDialog extends JDialog {
     private JTextField ytDlpPathField;
     private JComboBox<String> audioFormatCombo;
     private JComboBox<String> audioQualityCombo;
+    private JCheckBox cookiesEnabledCheckbox;
+    private JComboBox<String> cookiesBrowserCombo;
 
     public SettingsDialog(JFrame parent, Application app) {
         super(parent, "Configurações", true);
@@ -33,7 +35,7 @@ public class SettingsDialog extends JDialog {
     }
 
     private void initUI() {
-        setSize(600, 450);
+        setSize(600, 550);
         setLocationRelativeTo(getParent());
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setResizable(false);
@@ -61,6 +63,10 @@ public class SettingsDialog extends JDialog {
 
         // Seção: Sincronização
         mainPanel.add(createSyncPanel());
+        mainPanel.add(Box.createVerticalStrut(10));
+
+        // Seção: Autenticação
+        mainPanel.add(createAuthPanel());
         mainPanel.add(Box.createVerticalStrut(10));
 
         // Seção: Áudio
@@ -140,6 +146,51 @@ public class SettingsDialog extends JDialog {
         return panel;
     }
 
+    private JPanel createAuthPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Autenticação (Playlists Privadas)"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        // Checkbox para habilitar cookies
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0;
+        gbc.gridwidth = 1;
+        panel.add(new JLabel("Usar cookies do navegador:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        gbc.gridwidth = 2;
+        cookiesEnabledCheckbox = new JCheckBox("Habilitar acesso a playlists privadas");
+        cookiesEnabledCheckbox.addActionListener(e -> {
+            cookiesBrowserCombo.setEnabled(cookiesEnabledCheckbox.isSelected());
+        });
+        panel.add(cookiesEnabledCheckbox, gbc);
+
+        // ComboBox para escolher navegador
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0;
+        gbc.gridwidth = 1;
+        panel.add(new JLabel("Navegador:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        cookiesBrowserCombo = new JComboBox<>(new String[]{"chrome", "firefox", "edge", "safari", "opera", "brave", "chromium"});
+        panel.add(cookiesBrowserCombo, gbc);
+
+        gbc.gridx = 2;
+        gbc.weightx = 0;
+        JLabel hintLabel = new JLabel("(Navegador deve estar logado no YouTube)");
+        hintLabel.setFont(hintLabel.getFont().deriveFont(Font.ITALIC, 10f));
+        hintLabel.setForeground(Color.GRAY);
+        panel.add(hintLabel, gbc);
+
+        return panel;
+    }
+
     private JPanel createAudioPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Áudio"));
@@ -202,6 +253,9 @@ public class SettingsDialog extends JDialog {
         ytDlpPathField.setText(config.getYtDlpPath());
         audioFormatCombo.setSelectedItem(config.getAudioFormat());
         audioQualityCombo.setSelectedItem(config.getAudioQuality());
+        cookiesEnabledCheckbox.setSelected(config.getCookiesEnabled());
+        cookiesBrowserCombo.setSelectedItem(config.getCookiesBrowser());
+        cookiesBrowserCombo.setEnabled(config.getCookiesEnabled());
     }
 
     private void browseDirectory(JTextField targetField) {
@@ -287,6 +341,8 @@ public class SettingsDialog extends JDialog {
             config.setYtDlpPath(ytDlpPathField.getText().trim());
             config.setAudioFormat(format);
             config.setAudioQuality(qualityStr.trim());
+            config.setCookiesEnabled(cookiesEnabledCheckbox.isSelected());
+            config.setCookiesBrowser((String) cookiesBrowserCombo.getSelectedItem());
 
             // Se o intervalo mudou e o auto-sync está rodando, perguntar se quer reiniciar
             if (intervalChanged && app.isAutoSyncRunning()) {

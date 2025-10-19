@@ -13,11 +13,9 @@ public class Main {
     public static void main(String[] args) {
         Application app = new Application();
 
-        // Inicializa a interface gráfica
         UIManager uiManager = new UIManager(app);
         uiManager.initialize();
 
-        // Inicia a aplicação (modo CLI em background)
         app.start();
     }
 }

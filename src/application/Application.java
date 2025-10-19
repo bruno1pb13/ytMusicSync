@@ -78,6 +78,10 @@ public class Application {
         return syncService.getPlaylistStats(playlistId);
     }
 
+    public Config getConfig() {
+        return config;
+    }
+
     public Playlist addPlaylist(String url) {
         Playlist playlist = syncService.addPlaylist(url);
         pcs.firePropertyChange("playlistsChanged", null, playlist);

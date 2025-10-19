@@ -36,19 +36,15 @@ public class MainWindow extends JFrame {
         setSize(800, 600);
         setLocationRelativeTo(null);
 
-        // Layout principal
         setLayout(new BorderLayout(10, 10));
         ((JPanel) getContentPane()).setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Painel superior - Status
         JPanel topPanel = createTopPanel();
         add(topPanel, BorderLayout.NORTH);
 
-        // Painel central - Tabela de playlists
         JPanel centerPanel = createCenterPanel();
         add(centerPanel, BorderLayout.CENTER);
 
-        // Painel inferior - Botões
         JPanel bottomPanel = createBottomPanel();
         add(bottomPanel, BorderLayout.SOUTH);
     }
@@ -69,7 +65,6 @@ public class MainWindow extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Playlists"));
 
-        // Tabela
         String[] columnNames = {"Título", "Vídeos", "Baixados", "Pendentes", "Última Sinc."};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -96,7 +91,6 @@ public class MainWindow extends JFrame {
     private JPanel createBottomPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
 
-        // Painel de botões de playlist
         JPanel playlistButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         addButton = new JButton("Adicionar Playlist");
@@ -113,8 +107,10 @@ public class MainWindow extends JFrame {
         playlistButtonsPanel.add(removeButton);
         playlistButtonsPanel.add(syncSelectedButton);
 
-        // Painel de botões de sincronização
         JPanel syncButtonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        JButton settingsButton = new JButton("Configurações");
+        settingsButton.addActionListener(e -> openSettings());
 
         syncButton = new JButton("Sincronizar Todas");
         syncButton.addActionListener(e -> syncAll());
@@ -122,6 +118,7 @@ public class MainWindow extends JFrame {
         autoSyncButton = new JButton("Iniciar Sinc. Automática");
         autoSyncButton.addActionListener(e -> toggleAutoSync());
 
+        syncButtonsPanel.add(settingsButton);
         syncButtonsPanel.add(syncButton);
         syncButtonsPanel.add(autoSyncButton);
 
@@ -132,14 +129,12 @@ public class MainWindow extends JFrame {
     }
 
     private void setupListeners() {
-        // Listener para seleção na tabela
         playlistTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 removeButton.setEnabled(playlistTable.getSelectedRow() != -1);
             }
         });
 
-        // Listener para mudanças na aplicação
         app.addPropertyChangeListener(evt -> {
             SwingUtilities.invokeLater(this::updateUI);
         });
@@ -349,6 +344,11 @@ public class MainWindow extends JFrame {
         } else {
             app.startAutoSync();
         }
+    }
+
+    private void openSettings() {
+        SettingsDialog dialog = new SettingsDialog(this, app);
+        dialog.setVisible(true);
     }
 
     private String getPlaylistIdAtRow(int row) {

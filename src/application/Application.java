@@ -34,19 +34,8 @@ public class Application {
         PlaylistRepository playlistRepository = new JsonPlaylistRepository();
         VideoRepository videoRepository = new JsonVideoRepository();
 
-        PlaylistFetcher playlistFetcher = new YtDlpPlaylistFetcher(
-                config.getYtDlpPath(),
-                config.getCookiesEnabled(),
-                config.getCookiesBrowser()
-        );
-
-        AudioDownloader audioDownloader = new YtDlpAudioDownloader(
-                config.getYtDlpPath(),
-                config.getAudioFormat(),
-                config.getAudioQuality(),
-                config.getCookiesEnabled(),
-                config.getCookiesBrowser()
-        );
+        PlaylistFetcher playlistFetcher = new YtDlpPlaylistFetcher(config);
+        AudioDownloader audioDownloader = new YtDlpAudioDownloader(config);
 
         this.syncService = new SyncService(
                 playlistRepository,
@@ -135,13 +124,7 @@ public class Application {
         System.out.println("║     YT Music Sync - v1.0.0        ║");
         System.out.println("╚════════════════════════════════════╝");
 
-        AudioDownloader downloader = new YtDlpAudioDownloader(
-                config.getYtDlpPath(),
-                config.getAudioFormat(),
-                config.getAudioQuality(),
-                config.getCookiesEnabled(),
-                config.getCookiesBrowser()
-        );
+        AudioDownloader downloader = new YtDlpAudioDownloader(config);
 
         if (!downloader.isAvailable()) {
             System.err.println("\n⚠ AVISO: yt-dlp não encontrado!");

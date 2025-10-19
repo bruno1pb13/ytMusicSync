@@ -2,6 +2,7 @@ package ui;
 
 import application.Application;
 import domain.Playlist;
+import exception.PrivatePlaylistException;
 import service.SyncService;
 
 import javax.swing.*;
@@ -246,6 +247,24 @@ public class MainWindow extends JFrame {
                         if (result == JOptionPane.YES_OPTION) {
                             syncPlaylist(playlist.getId());
                         }
+                    });
+                } catch (PrivatePlaylistException ex) {
+                    // Erro específico de playlist privada
+                    SwingUtilities.invokeLater(() -> {
+                        setCursor(Cursor.getDefaultCursor());
+                        String message = "❌ PLAYLIST PRIVADA DETECTADA\n\n" +
+                                ex.getMessage() + "\n\n" +
+                                "Quantidade de músicas: " + (ex.getVideoCount() > 0 ? ex.getVideoCount() : "Desconhecida") + "\n\n" +
+                                "Para acessar playlists privadas:\n" +
+                                "1. Vá em Configurações\n" +
+                                "2. Marque 'Habilitar acesso a playlists privadas'\n" +
+                                "3. Selecione seu navegador (deve estar logado no YouTube)\n" +
+                                "4. Tente adicionar a playlist novamente";
+
+                        JOptionPane.showMessageDialog(this,
+                                message,
+                                "Playlist Privada",
+                                JOptionPane.WARNING_MESSAGE);
                     });
                 } catch (Exception ex) {
                     SwingUtilities.invokeLater(() -> {

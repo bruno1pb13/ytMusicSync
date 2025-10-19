@@ -1,6 +1,8 @@
 package adapter;
 
 import domain.Video;
+import exception.PrivatePlaylistException;
+import util.Config;
 import com.google.gson.*;
 import java.io.*;
 import java.time.LocalDate;
@@ -14,22 +16,23 @@ import java.util.regex.*;
  * Executa comandos do yt-dlp e parseia a saída JSON.
  */
 public class YtDlpPlaylistFetcher implements PlaylistFetcher {
-    private final String ytDlpPath;
+    private final Config config;
     private final Gson gson;
-    private final boolean cookiesEnabled;
-    private final String cookiesBrowser;
 
-    public YtDlpPlaylistFetcher(String ytDlpPath, boolean cookiesEnabled, String cookiesBrowser) {
-        this.ytDlpPath = ytDlpPath;
+    public YtDlpPlaylistFetcher(Config config) {
+        this.config = config;
         this.gson = new GsonBuilder().create();
-        this.cookiesEnabled = cookiesEnabled;
-        this.cookiesBrowser = cookiesBrowser;
     }
 
     @Override
     public List<Video> fetchVideos(String playlistUrl) {
         List<Video> videos = new ArrayList<>();
         String playlistId = extractPlaylistId(playlistUrl);
+
+        // Busca configurações atualizadas
+        String ytDlpPath = config.getYtDlpPath();
+        boolean cookiesEnabled = config.getCookiesEnabled();
+        String cookiesBrowser = config.getCookiesBrowser();
 
         try {
             List<String> command = new ArrayList<>();
@@ -60,13 +63,60 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
 
             int exitCode = process.waitFor();
             if (exitCode != 0) {
+                StringBuilder errorOutput = new StringBuilder();
                 BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                 String errorLine;
                 while ((errorLine = errorReader.readLine()) != null) {
                     System.err.println("yt-dlp erro: " + errorLine);
+                    errorOutput.append(errorLine).append("\n");
+                }
+
+                // Detecta se é erro de playlist privada ou inacessível
+                String errorText = errorOutput.toString().toLowerCase();
+                boolean isPrivateOrRestricted = errorText.contains("private") ||
+                    errorText.contains("members-only") ||
+                    errorText.contains("sign in") ||
+                    errorText.contains("this playlist is private") ||
+                    (errorText.contains("unavailable") && videos.isEmpty()) ||
+                    (errorText.contains("does not exist") && errorText.contains("youtube music")) ||
+                    (errorText.contains("playlist does not exist") && videos.isEmpty());
+
+                if (isPrivateOrRestricted) {
+                    // Tenta buscar info básica para obter o videoCount
+                    PlaylistInfo info = fetchPlaylistInfo(playlistUrl);
+
+                    // Detecta playlists especiais do YouTube Music (LM, etc)
+                    String specialPlaylistMessage = "";
+                    if (playlistUrl.contains("list=LM")) {
+                        specialPlaylistMessage = "Esta é a playlist 'Músicas Curtidas' do YouTube Music. ";
+                    }
+
+                    throw new PrivatePlaylistException(
+                        specialPlaylistMessage + "Esta playlist é privada/restrita e requer autenticação. " +
+                        "Habilite 'Usar cookies do navegador' nas Configurações.",
+                        info.getVideoCount(),
+                        cookiesEnabled
+                    );
                 }
             }
 
+            // Verifica se conseguiu buscar vídeos mesmo sem erro explícito
+            // (algumas playlists vazias podem não gerar erro mas serem inacessíveis)
+            if (videos.isEmpty() && exitCode == 0) {
+                PlaylistInfo info = fetchPlaylistInfo(playlistUrl);
+                // Se fetchPlaylistInfo também retornou 0 ou título "Desconhecida", pode ser privada
+                if (info.getVideoCount() == 0 && info.getTitle().equals("Desconhecida")) {
+                    throw new PrivatePlaylistException(
+                        "Não foi possível acessar esta playlist. Ela pode ser privada ou não existir. " +
+                        "Se for uma playlist privada, habilite 'Usar cookies do navegador' nas Configurações.",
+                        0,
+                        cookiesEnabled
+                    );
+                }
+            }
+
+        } catch (PrivatePlaylistException e) {
+            throw e; // Re-lança a exceção de playlist privada
         } catch (IOException | InterruptedException e) {
             System.err.println("Erro ao buscar vídeos da playlist: " + e.getMessage());
             Thread.currentThread().interrupt();
@@ -89,6 +139,11 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
 
     @Override
     public PlaylistInfo fetchPlaylistInfo(String playlistUrl) {
+        // Busca configurações atualizadas
+        String ytDlpPath = config.getYtDlpPath();
+        boolean cookiesEnabled = config.getCookiesEnabled();
+        String cookiesBrowser = config.getCookiesBrowser();
+
         try {
             List<String> command = new ArrayList<>();
             command.add(ytDlpPath);

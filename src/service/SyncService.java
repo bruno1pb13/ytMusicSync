@@ -4,6 +4,7 @@ import adapter.AudioDownloader;
 import adapter.PlaylistFetcher;
 import domain.Playlist;
 import domain.Video;
+import exception.PrivatePlaylistException;
 import repository.PlaylistRepository;
 import repository.VideoRepository;
 
@@ -57,6 +58,17 @@ public class SyncService {
 
         playlistRepository.save(playlist);
         System.out.println("✓ Playlist adicionada: " + playlist.getTitle());
+
+        // Verifica se a playlist é acessível tentando buscar os vídeos
+        System.out.println("Verificando acessibilidade da playlist...");
+        try {
+            List<Video> videos = playlistFetcher.fetchVideos(playlistUrl);
+            System.out.println("✓ Playlist verificada: " + videos.size() + " música(s) encontrada(s)");
+        } catch (PrivatePlaylistException e) {
+            // Remove a playlist que foi adicionada, já que não é acessível
+            playlistRepository.delete(playlistId);
+            throw e; // Re-lança a exceção para que a UI possa tratar
+        }
 
         return playlist;
     }

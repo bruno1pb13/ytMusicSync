@@ -3,6 +3,8 @@ package adapter;
 import domain.Video;
 import java.io.*;
 import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implementação de AudioDownloader usando yt-dlp.
@@ -12,11 +14,16 @@ public class YtDlpAudioDownloader implements AudioDownloader {
     private final String ytDlpPath;
     private final String audioFormat;
     private final String audioQuality;
+    private final boolean cookiesEnabled;
+    private final String cookiesBrowser;
 
-    public YtDlpAudioDownloader(String ytDlpPath, String audioFormat, String audioQuality) {
+    public YtDlpAudioDownloader(String ytDlpPath, String audioFormat, String audioQuality,
+                                boolean cookiesEnabled, String cookiesBrowser) {
         this.ytDlpPath = ytDlpPath;
         this.audioFormat = audioFormat;
         this.audioQuality = audioQuality;
+        this.cookiesEnabled = cookiesEnabled;
+        this.cookiesBrowser = cookiesBrowser;
     }
 
     @Override
@@ -27,18 +34,26 @@ public class YtDlpAudioDownloader implements AudioDownloader {
 
             String outputTemplate = outputDirectory + "/%(title)s.%(ext)s";
 
-            ProcessBuilder pb = new ProcessBuilder(
-                    ytDlpPath,
-                    "-x",  // Extrai apenas áudio
-                    "--audio-format", audioFormat,
-                    "--audio-quality", audioQuality,
-                    "--no-playlist",  // Baixa apenas o vídeo específico
-                    "--output", outputTemplate,
-                    "--no-mtime",  // Não preserva timestamp original
-                    "--embed-thumbnail",  // Embute thumbnail no arquivo
-                    "--add-metadata",  // Adiciona metadados
-                    video.getUrl()
-            );
+            List<String> command = new ArrayList<>();
+            command.add(ytDlpPath);
+            command.add("-x");  // Extrai apenas áudio
+            command.add("--audio-format");
+            command.add(audioFormat);
+            command.add("--audio-quality");
+            command.add(audioQuality);
+            command.add("--no-playlist");  // Baixa apenas o vídeo específico
+            command.add("--output");
+            command.add(outputTemplate);
+            command.add("--no-mtime");  // Não preserva timestamp original
+            command.add("--embed-thumbnail");  // Embute thumbnail no arquivo
+            command.add("--add-metadata");  // Adiciona metadados
+            if (cookiesEnabled) {
+                command.add("--cookies-from-browser");
+                command.add(cookiesBrowser);
+            }
+            command.add(video.getUrl());
+
+            ProcessBuilder pb = new ProcessBuilder(command);
 
             System.out.println("Baixando: " + video.getTitle());
 

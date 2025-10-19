@@ -34,12 +34,18 @@ public class Application {
         PlaylistRepository playlistRepository = new JsonPlaylistRepository();
         VideoRepository videoRepository = new JsonVideoRepository();
 
-        PlaylistFetcher playlistFetcher = new YtDlpPlaylistFetcher(config.getYtDlpPath());
+        PlaylistFetcher playlistFetcher = new YtDlpPlaylistFetcher(
+                config.getYtDlpPath(),
+                config.getCookiesEnabled(),
+                config.getCookiesBrowser()
+        );
 
         AudioDownloader audioDownloader = new YtDlpAudioDownloader(
                 config.getYtDlpPath(),
                 config.getAudioFormat(),
-                config.getAudioQuality()
+                config.getAudioQuality(),
+                config.getCookiesEnabled(),
+                config.getCookiesBrowser()
         );
 
         this.syncService = new SyncService(
@@ -132,7 +138,9 @@ public class Application {
         AudioDownloader downloader = new YtDlpAudioDownloader(
                 config.getYtDlpPath(),
                 config.getAudioFormat(),
-                config.getAudioQuality()
+                config.getAudioQuality(),
+                config.getCookiesEnabled(),
+                config.getCookiesBrowser()
         );
 
         if (!downloader.isAvailable()) {

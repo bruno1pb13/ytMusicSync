@@ -21,9 +21,6 @@ public class SchedulerService {
         this.intervalMinutes = intervalMinutes;
     }
 
-    /**
-     * Inicia verificações periódicas.
-     */
     public synchronized void start() {
         if (running) {
             System.out.println("Scheduler já está rodando");
@@ -60,9 +57,6 @@ public class SchedulerService {
         System.out.println("✓ Verificações automáticas iniciadas (intervalo: " + intervalMinutes + " minutos)");
     }
 
-    /**
-     * Para as verificações periódicas.
-     */
     public synchronized void stop() {
         if (!running) {
             System.out.println("Scheduler não está rodando");
@@ -89,30 +83,18 @@ public class SchedulerService {
         System.out.println("✓ Verificações automáticas paradas");
     }
 
-    /**
-     * Verifica se o scheduler está rodando.
-     */
     public boolean isRunning() {
         return running;
     }
 
-    /**
-     * Retorna o intervalo configurado em minutos.
-     */
     public int getIntervalMinutes() {
         return intervalMinutes;
     }
 
-    /**
-     * Retorna o timestamp da última execução.
-     */
     public LocalDateTime getLastRunAt() {
         return lastRunAt;
     }
 
-    /**
-     * Retorna informações completas sobre o status do scheduler.
-     */
     public String getStatusInfo() {
         StringBuilder sb = new StringBuilder();
         sb.append("Status: ");

@@ -5,7 +5,6 @@ import java.util.List;
 
 /**
  * Interface para buscar informações de playlists do YouTube.
- * Abstração permite trocar implementação (API, yt-dlp, etc).
  */
 public interface PlaylistFetcher {
     /**
@@ -15,14 +14,8 @@ public interface PlaylistFetcher {
      */
     List<Video> fetchVideos(String playlistUrl);
 
-    /**
-     * Extrai o ID da playlist de uma URL.
-     */
     String extractPlaylistId(String playlistUrl);
 
-    /**
-     * Busca informações básicas da playlist (título, etc).
-     */
     PlaylistInfo fetchPlaylistInfo(String playlistUrl);
 
     class PlaylistInfo {

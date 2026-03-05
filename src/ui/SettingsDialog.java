@@ -1,6 +1,7 @@
 package ui;
 
 import application.Application;
+import util.AutostartManager;
 import util.Config;
 
 import javax.swing.*;
@@ -21,6 +22,7 @@ public class SettingsDialog extends JDialog {
     private JComboBox<String> audioQualityCombo;
     private JCheckBox cookiesEnabledCheckbox;
     private JComboBox<String> cookiesBrowserCombo;
+    private JCheckBox autostartCheckbox;
 
     public SettingsDialog(JFrame parent, Application app) {
         super(parent, "Configuracoes", true);
@@ -79,6 +81,8 @@ public class SettingsDialog extends JDialog {
         content.add(buildSection("Autenticacao (Playlists Privadas)", buildAuthPanel()));
         content.add(Box.createVerticalStrut(14));
         content.add(buildSection("Audio",                      buildAudioPanel()));
+        content.add(Box.createVerticalStrut(14));
+        content.add(buildSection("Sistema",                    buildSystemPanel()));
 
         JScrollPane scroll = new JScrollPane(content);
         scroll.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, MaterialTheme.OUTLINE_VARIANT));
@@ -182,6 +186,50 @@ public class SettingsDialog extends JDialog {
         return panel;
     }
 
+    private JPanel buildSystemPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setOpaque(false);
+        GridBagConstraints gbc = defaultGbc();
+
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
+        panel.add(fieldLabel("Inicializacao:"), gbc);
+
+        gbc.gridx = 1; gbc.weightx = 1; gbc.gridwidth = 2;
+        autostartCheckbox = new JCheckBox("Iniciar automaticamente com o sistema");
+        autostartCheckbox.setOpaque(false);
+
+        boolean jarMode = isRunningFromJar();
+        boolean supported = AutostartManager.isSupported();
+
+        if (!jarMode) {
+            autostartCheckbox.setEnabled(false);
+            autostartCheckbox.setToolTipText("Disponivel apenas em versao empacotada");
+            panel.add(autostartCheckbox, gbc);
+            gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 3;
+            panel.add(hintLabel("(disponivel apenas em versao empacotada)"), gbc);
+        } else if (!supported) {
+            autostartCheckbox.setEnabled(false);
+            autostartCheckbox.setToolTipText("Nao suportado neste sistema operacional");
+            panel.add(autostartCheckbox, gbc);
+            gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 3;
+            panel.add(hintLabel("(nao suportado neste sistema)"), gbc);
+        } else {
+            panel.add(autostartCheckbox, gbc);
+        }
+
+        return panel;
+    }
+
+    private static boolean isRunningFromJar() {
+        try {
+            java.net.URL location = AutostartManager.class.getProtectionDomain()
+                    .getCodeSource().getLocation();
+            return location.toURI().getPath().endsWith(".jar");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private JPanel buildAudioPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setOpaque(false);
@@ -262,6 +310,9 @@ public class SettingsDialog extends JDialog {
         cookiesEnabledCheckbox.setSelected(config.getCookiesEnabled());
         cookiesBrowserCombo.setSelectedItem(config.getCookiesBrowser());
         cookiesBrowserCombo.setEnabled(config.getCookiesEnabled());
+        if (autostartCheckbox.isEnabled()) {
+            autostartCheckbox.setSelected(AutostartManager.isEnabled());
+        }
     }
 
     private void browseDirectory(JTextField targetField) {
@@ -338,6 +389,16 @@ public class SettingsDialog extends JDialog {
             config.setAudioQuality(qualityStr.trim());
             config.setCookiesEnabled(cookiesEnabledCheckbox.isSelected());
             config.setCookiesBrowser((String) cookiesBrowserCombo.getSelectedItem());
+
+            if (autostartCheckbox.isEnabled()) {
+                try {
+                    AutostartManager.setAutostart(autostartCheckbox.isSelected());
+                } catch (Exception autostartEx) {
+                    JOptionPane.showMessageDialog(this,
+                            "Aviso: nao foi possivel configurar o autostart.\n" + autostartEx.getMessage(),
+                            "Aviso de Autostart", JOptionPane.WARNING_MESSAGE);
+                }
+            }
 
             if (intervalChanged && app.isAutoSyncRunning()) {
                 int result = JOptionPane.showConfirmDialog(this,

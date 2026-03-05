@@ -221,7 +221,7 @@ class SyncServiceTest {
         when(playlistFetcher.fetchVideos(playlist.getUrl())).thenReturn(Collections.emptyList());
         when(videoRepository.findNotDownloadedByPlaylistId(playlistId))
                 .thenReturn(Collections.singletonList(pendingVideo));
-        when(audioDownloader.download(any(Video.class), anyString())).thenReturn(true);
+        when(audioDownloader.download(any(Video.class), anyString())).thenReturn(null);
 
         // Act
         SyncResult result = syncService.syncPlaylist(playlistId);
@@ -272,7 +272,7 @@ class SyncServiceTest {
         when(playlistFetcher.fetchVideos(playlist.getUrl())).thenReturn(Collections.emptyList());
         when(videoRepository.findNotDownloadedByPlaylistId(playlistId))
                 .thenReturn(Collections.singletonList(pendingVideo));
-        when(audioDownloader.download(any(Video.class), anyString())).thenReturn(false);
+        when(audioDownloader.download(any(Video.class), anyString())).thenReturn("Download falhou");
 
         // Act
         SyncResult result = syncService.syncPlaylist(playlistId);

@@ -2,6 +2,7 @@ package repository;
 
 import domain.Playlist;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
@@ -13,25 +14,14 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("JsonPlaylistRepository Tests")
 class JsonPlaylistRepositoryTest {
 
-    private static final String TEST_DATA_FILE = "data/playlists.json";
+    @TempDir
+    Path tempDir;
+
     private JsonPlaylistRepository repository;
 
     @BeforeEach
-    void setUp() throws IOException {
-        cleanupTestFile();
-        repository = new JsonPlaylistRepository();
-    }
-
-    @AfterEach
-    void tearDown() throws IOException {
-        cleanupTestFile();
-    }
-
-    private void cleanupTestFile() throws IOException {
-        Path path = Paths.get(TEST_DATA_FILE);
-        if (Files.exists(path)) {
-            Files.delete(path);
-        }
+    void setUp() {
+        repository = new JsonPlaylistRepository(tempDir);
     }
 
     @Test
@@ -140,7 +130,7 @@ class JsonPlaylistRepositoryTest {
         repository.save(playlist);
 
         // Simula restart - nova instância do repositório
-        JsonPlaylistRepository newRepository = new JsonPlaylistRepository();
+        JsonPlaylistRepository newRepository = new JsonPlaylistRepository(tempDir);
         Optional<Playlist> reloaded = newRepository.findById("playlist123");
 
         // Assert

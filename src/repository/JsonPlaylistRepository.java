@@ -1,6 +1,7 @@
 package repository;
 
 import domain.Playlist;
+import util.AppDataDir;
 import com.google.gson.*;
 import java.io.*;
 import java.nio.file.*;
@@ -14,13 +15,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * Thread-safe com ConcurrentHashMap.
  */
 public class JsonPlaylistRepository implements PlaylistRepository {
-    private static final String DATA_FILE = "data/playlists.json";
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
+    private final Path dataFile;
     private final Map<String, Playlist> cache = new ConcurrentHashMap<>();
     private final Gson gson;
 
     public JsonPlaylistRepository() {
+        this(AppDataDir.get());
+    }
+
+    JsonPlaylistRepository(Path dataDir) {
+        this.dataFile = dataDir.resolve("playlists.json");
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
                 .setPrettyPrinting()
@@ -64,7 +70,7 @@ public class JsonPlaylistRepository implements PlaylistRepository {
 
     private void loadFromFile() {
         try {
-            Path path = Paths.get(DATA_FILE);
+            Path path = dataFile;
             if (!Files.exists(path)) {
                 Files.createDirectories(path.getParent());
                 return;
@@ -96,7 +102,7 @@ public class JsonPlaylistRepository implements PlaylistRepository {
 
             root.add("playlists", playlists);
 
-            Path path = Paths.get(DATA_FILE);
+            Path path = dataFile;
             Files.createDirectories(path.getParent());
             Files.writeString(path, gson.toJson(root));
         } catch (IOException e) {

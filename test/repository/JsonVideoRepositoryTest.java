@@ -2,6 +2,7 @@ package repository;
 
 import domain.Video;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
@@ -13,25 +14,14 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("JsonVideoRepository Tests")
 class JsonVideoRepositoryTest {
 
-    private static final String TEST_DATA_FILE = "data/videos.json";
+    @TempDir
+    Path tempDir;
+
     private JsonVideoRepository repository;
 
     @BeforeEach
-    void setUp() throws IOException {
-        cleanupTestFile();
-        repository = new JsonVideoRepository();
-    }
-
-    @AfterEach
-    void tearDown() throws IOException {
-        cleanupTestFile();
-    }
-
-    private void cleanupTestFile() throws IOException {
-        Path path = Paths.get(TEST_DATA_FILE);
-        if (Files.exists(path)) {
-            Files.delete(path);
-        }
+    void setUp() {
+        repository = new JsonVideoRepository(tempDir);
     }
 
     @Test
@@ -159,7 +149,7 @@ class JsonVideoRepositoryTest {
         repository.save(video);
 
         // Simula restart - nova instância do repositório
-        JsonVideoRepository newRepository = new JsonVideoRepository();
+        JsonVideoRepository newRepository = new JsonVideoRepository(tempDir);
         Optional<Video> reloaded = newRepository.findById("video123");
 
         // Assert

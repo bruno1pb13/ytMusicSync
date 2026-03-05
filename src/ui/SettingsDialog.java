@@ -9,15 +9,11 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
 
-/**
- * Diálogo de configurações da aplicação.
- */
 public class SettingsDialog extends JDialog {
 
     private final Application app;
     private final Config config;
 
-    // Campos de configuração
     private JTextField downloadDirField;
     private JTextField intervalField;
     private JTextField ytDlpPathField;
@@ -27,225 +23,235 @@ public class SettingsDialog extends JDialog {
     private JComboBox<String> cookiesBrowserCombo;
 
     public SettingsDialog(JFrame parent, Application app) {
-        super(parent, "Configurações", true);
-        this.app = app;
+        super(parent, "Configuracoes", true);
+        this.app    = app;
         this.config = app.getConfig();
         initUI();
         loadCurrentSettings();
     }
 
     private void initUI() {
-        setSize(600, 550);
+        setMinimumSize(new Dimension(620, 480));
         setLocationRelativeTo(getParent());
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        setResizable(false);
+        setResizable(true);
+        setBackground(MaterialTheme.BACKGROUND);
 
-        // Layout principal
-        setLayout(new BorderLayout(10, 10));
-        ((JPanel) getContentPane()).setBorder(new EmptyBorder(15, 15, 15, 15));
+        JPanel root = new JPanel(new BorderLayout(0, 0));
+        root.setBackground(MaterialTheme.BACKGROUND);
+        setContentPane(root);
 
-        // Painel central - Campos de configuração
-        JPanel centerPanel = createCenterPanel();
-        add(centerPanel, BorderLayout.CENTER);
+        root.add(createHeader(),  BorderLayout.NORTH);
+        root.add(createContent(), BorderLayout.CENTER);
+        root.add(createFooter(),  BorderLayout.SOUTH);
 
-        // Painel inferior - Botões
-        JPanel bottomPanel = createBottomPanel();
-        add(bottomPanel, BorderLayout.SOUTH);
+        pack();
+        setLocationRelativeTo(getParent());
     }
 
-    private JPanel createCenterPanel() {
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+    // -------------------------------------------------------------------------
+    // Layout builders
+    // -------------------------------------------------------------------------
 
-        // Seção: Caminhos
-        mainPanel.add(createPathsPanel());
-        mainPanel.add(Box.createVerticalStrut(10));
+    private JPanel createHeader() {
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(MaterialTheme.PRIMARY);
+        header.setBorder(new EmptyBorder(16, 24, 16, 24));
 
-        // Seção: Sincronização
-        mainPanel.add(createSyncPanel());
-        mainPanel.add(Box.createVerticalStrut(10));
+        JLabel titleLabel = new JLabel("Configuracoes");
+        titleLabel.setFont(MaterialTheme.titleMedium());
+        titleLabel.setForeground(MaterialTheme.ON_PRIMARY);
 
-        // Seção: Autenticação
-        mainPanel.add(createAuthPanel());
-        mainPanel.add(Box.createVerticalStrut(10));
-
-        // Seção: Áudio
-        mainPanel.add(createAudioPanel());
-
-        return mainPanel;
+        header.add(titleLabel, BorderLayout.WEST);
+        return header;
     }
 
-    private JPanel createPathsPanel() {
+    private JScrollPane createContent() {
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(MaterialTheme.BACKGROUND);
+        content.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        content.add(buildSection("Caminhos",                   buildPathsPanel()));
+        content.add(Box.createVerticalStrut(14));
+        content.add(buildSection("Sincronizacao",              buildSyncPanel()));
+        content.add(Box.createVerticalStrut(14));
+        content.add(buildSection("Autenticacao (Playlists Privadas)", buildAuthPanel()));
+        content.add(Box.createVerticalStrut(14));
+        content.add(buildSection("Audio",                      buildAudioPanel()));
+
+        JScrollPane scroll = new JScrollPane(content);
+        scroll.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, MaterialTheme.OUTLINE_VARIANT));
+        scroll.getViewport().setBackground(MaterialTheme.BACKGROUND);
+        return scroll;
+    }
+
+    private JPanel buildSection(String title, JPanel body) {
+        JPanel card = MaterialTheme.card(MaterialTheme.SURFACE_CONTAINER_LOW);
+        card.setLayout(new BorderLayout(0, 10));
+        card.setBorder(new EmptyBorder(16, 16, 16, 16));
+
+        JLabel label = new JLabel(title);
+        label.setFont(MaterialTheme.titleSmall());
+        label.setForeground(MaterialTheme.PRIMARY);
+        label.setBorder(new EmptyBorder(0, 0, 6, 0));
+
+        card.add(label, BorderLayout.NORTH);
+        card.add(body,  BorderLayout.CENTER);
+        return card;
+    }
+
+    private JPanel buildPathsPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Caminhos"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
+        panel.setOpaque(false);
+        GridBagConstraints gbc = defaultGbc();
 
-        // Diretório de downloads
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0;
-        panel.add(new JLabel("Diretório de Downloads:"), gbc);
+        // Download directory
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
+        panel.add(fieldLabel("Diretorio de Downloads:"), gbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 1;
+        gbc.gridx = 1; gbc.weightx = 1;
         downloadDirField = new JTextField(30);
         panel.add(downloadDirField, gbc);
 
-        gbc.gridx = 2;
-        gbc.weightx = 0;
-        JButton browseDownloadButton = new JButton("Procurar");
-        browseDownloadButton.addActionListener(e -> browseDirectory(downloadDirField));
-        panel.add(browseDownloadButton, gbc);
+        gbc.gridx = 2; gbc.weightx = 0;
+        JButton browseDownloadBtn = MaterialTheme.outlinedButton("Procurar");
+        browseDownloadBtn.addActionListener(e -> browseDirectory(downloadDirField));
+        panel.add(browseDownloadBtn, gbc);
 
-        // Caminho do yt-dlp
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weightx = 0;
-        panel.add(new JLabel("Caminho do yt-dlp:"), gbc);
+        // yt-dlp path
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
+        panel.add(fieldLabel("Caminho do yt-dlp:"), gbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 1;
+        gbc.gridx = 1; gbc.weightx = 1;
         ytDlpPathField = new JTextField(30);
         panel.add(ytDlpPathField, gbc);
 
-        gbc.gridx = 2;
-        gbc.weightx = 0;
-        JButton browseYtDlpButton = new JButton("Procurar");
-        browseYtDlpButton.addActionListener(e -> browseFile(ytDlpPathField));
-        panel.add(browseYtDlpButton, gbc);
+        gbc.gridx = 2; gbc.weightx = 0;
+        JButton browseYtDlpBtn = MaterialTheme.outlinedButton("Procurar");
+        browseYtDlpBtn.addActionListener(e -> browseFile(ytDlpPathField));
+        panel.add(browseYtDlpBtn, gbc);
 
         return panel;
     }
 
-    private JPanel createSyncPanel() {
+    private JPanel buildSyncPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Sincronização"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
+        panel.setOpaque(false);
+        GridBagConstraints gbc = defaultGbc();
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0;
-        panel.add(new JLabel("Intervalo de Verificação (minutos):"), gbc);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
+        panel.add(fieldLabel("Intervalo de Verificacao (minutos):"), gbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 1;
+        gbc.gridx = 1; gbc.weightx = 1;
         intervalField = new JTextField(10);
         panel.add(intervalField, gbc);
 
-        gbc.gridx = 2;
-        gbc.weightx = 0;
-        JLabel hintLabel = new JLabel("(mínimo: 1)");
-        hintLabel.setFont(hintLabel.getFont().deriveFont(Font.ITALIC, 11f));
-        hintLabel.setForeground(Color.GRAY);
-        panel.add(hintLabel, gbc);
+        gbc.gridx = 2; gbc.weightx = 0;
+        panel.add(hintLabel("(minimo: 1)"), gbc);
 
         return panel;
     }
 
-    private JPanel createAuthPanel() {
+    private JPanel buildAuthPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Autenticação (Playlists Privadas)"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
+        panel.setOpaque(false);
+        GridBagConstraints gbc = defaultGbc();
 
-        // Checkbox para habilitar cookies
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0;
-        gbc.gridwidth = 1;
-        panel.add(new JLabel("Usar cookies do navegador:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
+        panel.add(fieldLabel("Usar cookies do navegador:"), gbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 1;
-        gbc.gridwidth = 2;
+        gbc.gridx = 1; gbc.weightx = 1; gbc.gridwidth = 2;
         cookiesEnabledCheckbox = new JCheckBox("Habilitar acesso a playlists privadas");
-        cookiesEnabledCheckbox.addActionListener(e -> {
-            cookiesBrowserCombo.setEnabled(cookiesEnabledCheckbox.isSelected());
-        });
+        cookiesEnabledCheckbox.setOpaque(false);
+        cookiesEnabledCheckbox.addActionListener(e ->
+                cookiesBrowserCombo.setEnabled(cookiesEnabledCheckbox.isSelected()));
         panel.add(cookiesEnabledCheckbox, gbc);
 
-        // ComboBox para escolher navegador
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weightx = 0;
-        gbc.gridwidth = 1;
-        panel.add(new JLabel("Navegador:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0; gbc.gridwidth = 1;
+        panel.add(fieldLabel("Navegador:"), gbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 1;
-        cookiesBrowserCombo = new JComboBox<>(new String[]{"chrome", "firefox", "edge", "safari", "opera", "brave", "chromium"});
+        gbc.gridx = 1; gbc.weightx = 1;
+        cookiesBrowserCombo = new JComboBox<>(
+                new String[]{"chrome", "firefox", "edge", "safari", "opera", "brave", "chromium"});
         panel.add(cookiesBrowserCombo, gbc);
 
-        gbc.gridx = 2;
-        gbc.weightx = 0;
-        JLabel hintLabel = new JLabel("(Navegador deve estar logado no YouTube)");
-        hintLabel.setFont(hintLabel.getFont().deriveFont(Font.ITALIC, 10f));
-        hintLabel.setForeground(Color.GRAY);
-        panel.add(hintLabel, gbc);
+        gbc.gridx = 2; gbc.weightx = 0;
+        panel.add(hintLabel("(Navegador deve estar logado no YouTube)"), gbc);
 
         return panel;
     }
 
-    private JPanel createAudioPanel() {
+    private JPanel buildAudioPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Áudio"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
+        panel.setOpaque(false);
+        GridBagConstraints gbc = defaultGbc();
 
-        // Formato de áudio
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0;
-        panel.add(new JLabel("Formato de Áudio:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
+        panel.add(fieldLabel("Formato de Audio:"), gbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 1;
+        gbc.gridx = 1; gbc.weightx = 1;
         audioFormatCombo = new JComboBox<>(new String[]{"mp3", "m4a", "opus"});
         panel.add(audioFormatCombo, gbc);
 
-        // Qualidade de áudio
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weightx = 0;
-        panel.add(new JLabel("Qualidade de Áudio (kbps):"), gbc);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
+        panel.add(fieldLabel("Qualidade de Audio (kbps):"), gbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 1;
+        gbc.gridx = 1; gbc.weightx = 1;
         audioQualityCombo = new JComboBox<>(new String[]{"128", "192", "256", "320"});
         audioQualityCombo.setEditable(true);
         panel.add(audioQualityCombo, gbc);
 
-        gbc.gridx = 2;
-        gbc.weightx = 0;
-        JLabel hintLabel = new JLabel("(64-320)");
-        hintLabel.setFont(hintLabel.getFont().deriveFont(Font.ITALIC, 11f));
-        hintLabel.setForeground(Color.GRAY);
-        panel.add(hintLabel, gbc);
+        gbc.gridx = 2; gbc.weightx = 0;
+        panel.add(hintLabel("(64–320)"), gbc);
 
         return panel;
     }
 
-    private JPanel createBottomPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    private JPanel createFooter() {
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 12));
+        footer.setBackground(MaterialTheme.SURFACE_CONTAINER);
 
-        JButton cancelButton = new JButton("Cancelar");
-        cancelButton.addActionListener(e -> dispose());
+        JButton cancelBtn = MaterialTheme.textButton("Cancelar");
+        cancelBtn.addActionListener(e -> dispose());
 
-        // Botões
-        JButton saveButton = new JButton("Salvar");
-        saveButton.addActionListener(e -> saveSettings());
+        JButton saveBtn = MaterialTheme.filledButton("Salvar");
+        saveBtn.addActionListener(e -> saveSettings());
 
-        panel.add(cancelButton);
-        panel.add(saveButton);
-
-        return panel;
+        footer.add(cancelBtn);
+        footer.add(saveBtn);
+        return footer;
     }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    private static GridBagConstraints defaultGbc() {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill    = GridBagConstraints.HORIZONTAL;
+        gbc.insets  = new Insets(5, 5, 5, 5);
+        gbc.gridwidth = 1;
+        return gbc;
+    }
+
+    private static JLabel fieldLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(MaterialTheme.bodyMedium());
+        label.setForeground(MaterialTheme.ON_SURFACE);
+        return label;
+    }
+
+    private static JLabel hintLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(MaterialTheme.bodySmall());
+        label.setForeground(MaterialTheme.ON_SURFACE_VARIANT);
+        return label;
+    }
+
+    // -------------------------------------------------------------------------
+    // Load / Save
+    // -------------------------------------------------------------------------
 
     private void loadCurrentSettings() {
         downloadDirField.setText(config.getDownloadDirectory());
@@ -260,7 +266,7 @@ public class SettingsDialog extends JDialog {
 
     private void browseDirectory(JTextField targetField) {
         JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        fileChooser.setDialogTitle("Selecionar Diretório");
+        fileChooser.setDialogTitle("Selecionar Diretorio");
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
         String currentPath = targetField.getText();
@@ -271,10 +277,8 @@ public class SettingsDialog extends JDialog {
             }
         }
 
-        int result = fileChooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedDir = fileChooser.getSelectedFile();
-            targetField.setText(selectedDir.getAbsolutePath());
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            targetField.setText(fileChooser.getSelectedFile().getAbsolutePath());
         }
     }
 
@@ -293,47 +297,38 @@ public class SettingsDialog extends JDialog {
             }
         }
 
-        int result = fileChooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-            targetField.setText(selectedFile.getAbsolutePath());
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            targetField.setText(fileChooser.getSelectedFile().getAbsolutePath());
         }
     }
 
     private void saveSettings() {
         try {
-            // Validar intervalo
             int interval = Integer.parseInt(intervalField.getText().trim());
             if (interval < 1) {
                 JOptionPane.showMessageDialog(this,
-                        "O intervalo deve ser no mínimo 1 minuto.",
-                        "Erro de Validação",
-                        JOptionPane.ERROR_MESSAGE);
+                        "O intervalo deve ser no minimo 1 minuto.",
+                        "Erro de Validacao", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // Validar qualidade de áudio
             String qualityStr = (String) audioQualityCombo.getSelectedItem();
             int quality = Integer.parseInt(qualityStr.trim());
             if (quality < 64 || quality > 320) {
                 JOptionPane.showMessageDialog(this,
-                        "A qualidade de áudio deve estar entre 64 e 320 kbps.",
-                        "Erro de Validação",
-                        JOptionPane.ERROR_MESSAGE);
+                        "A qualidade de audio deve estar entre 64 e 320 kbps.",
+                        "Erro de Validacao", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // Validar formato de áudio
             String format = (String) audioFormatCombo.getSelectedItem();
             if (!format.equals("mp3") && !format.equals("m4a") && !format.equals("opus")) {
                 JOptionPane.showMessageDialog(this,
-                        "Formato de áudio inválido. Use: mp3, m4a ou opus.",
-                        "Erro de Validação",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Formato de audio invalido. Use: mp3, m4a ou opus.",
+                        "Erro de Validacao", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // Salvar configurações
             boolean intervalChanged = interval != config.getCheckIntervalMinutes();
 
             config.setDownloadDirectory(downloadDirField.getText().trim());
@@ -344,52 +339,42 @@ public class SettingsDialog extends JDialog {
             config.setCookiesEnabled(cookiesEnabledCheckbox.isSelected());
             config.setCookiesBrowser((String) cookiesBrowserCombo.getSelectedItem());
 
-            // Se o intervalo mudou e o auto-sync está rodando, perguntar se quer reiniciar
             if (intervalChanged && app.isAutoSyncRunning()) {
                 int result = JOptionPane.showConfirmDialog(this,
-                        "A sincronização automática está ativa.\n" +
-                        "Deseja reiniciá-la para aplicar o novo intervalo?",
-                        "Reiniciar Sincronização?",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE);
+                        "A sincronizacao automatica esta ativa.\n" +
+                        "Deseja reinicia-la para aplicar o novo intervalo?",
+                        "Reiniciar Sincronizacao?",
+                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
                 if (result == JOptionPane.YES_OPTION) {
                     app.stopAutoSync();
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException ex) {
+                    try { Thread.sleep(500); } catch (InterruptedException ex) {
                         Thread.currentThread().interrupt();
                     }
                     app.startAutoSync();
                     JOptionPane.showMessageDialog(this,
-                            "Configurações salvas e sincronização reiniciada!",
-                            "Sucesso",
-                            JOptionPane.INFORMATION_MESSAGE);
+                            "Configuracoes salvas e sincronizacao reiniciada!",
+                            "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     JOptionPane.showMessageDialog(this,
-                            "Configurações salvas!\nO novo intervalo será aplicado no próximo início.",
-                            "Sucesso",
-                            JOptionPane.INFORMATION_MESSAGE);
+                            "Configuracoes salvas!\nO novo intervalo sera aplicado no proximo inicio.",
+                            "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                 }
             } else {
                 JOptionPane.showMessageDialog(this,
-                        "Configurações salvas com sucesso!",
-                        "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE);
+                        "Configuracoes salvas com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
 
             dispose();
 
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this,
-                    "Valores numéricos inválidos. Verifique os campos de intervalo e qualidade.",
-                    "Erro de Validação",
-                    JOptionPane.ERROR_MESSAGE);
+                    "Valores numericos invalidos. Verifique os campos de intervalo e qualidade.",
+                    "Erro de Validacao", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
-                    "Erro ao salvar configurações: " + e.getMessage(),
-                    "Erro",
-                    JOptionPane.ERROR_MESSAGE);
+                    "Erro ao salvar configuracoes: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

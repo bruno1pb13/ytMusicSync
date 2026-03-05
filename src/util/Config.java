@@ -39,6 +39,7 @@ public class Config {
         properties.setProperty("audio.quality", "320");
         properties.setProperty("cookies.enabled", "false");
         properties.setProperty("cookies.browser", "chrome");
+        properties.setProperty("auto.sync.enabled", "false");
         saveConfig();
         System.out.println("✓ Configuração padrão criada");
     }
@@ -111,6 +112,15 @@ public class Config {
 
     public void setCookiesBrowser(String browser) {
         properties.setProperty("cookies.browser", browser);
+        saveConfig();
+    }
+
+    public boolean getAutoSyncEnabled() {
+        return Boolean.parseBoolean(properties.getProperty("auto.sync.enabled", "false"));
+    }
+
+    public void setAutoSyncEnabled(boolean enabled) {
+        properties.setProperty("auto.sync.enabled", String.valueOf(enabled));
         saveConfig();
     }
 

@@ -44,6 +44,8 @@ public class YtDlpAudioDownloader implements AudioDownloader {
             command.add("--no-playlist");  // Baixa apenas o vídeo específico
             command.add("--output");
             command.add(outputTemplate);
+            command.add("--js-runtimes");
+            command.add("node");
             command.add("--no-mtime");  // Não preserva timestamp original
             command.add("--embed-thumbnail");  // Embute thumbnail no arquivo
             command.add("--add-metadata");  // Adiciona metadados

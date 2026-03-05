@@ -2,6 +2,7 @@ package application;
 
 import adapter.*;
 import domain.Playlist;
+import domain.Video;
 import repository.*;
 import service.*;
 import util.Config;
@@ -9,7 +10,9 @@ import util.Config;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 /**
@@ -26,6 +29,11 @@ public class Application {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private boolean autoSyncRunning;
     private boolean syncInProgress;
+    private String syncCurrentVideo;
+    private int syncDownloadCurrent;
+    private int syncDownloadTotal;
+    private String downloadingVideoId;
+    private final Map<String, String> videoErrors = new HashMap<>();
 
     public Application() {
         this.config = new Config();
@@ -57,6 +65,35 @@ public class Application {
         );
 
         this.schedulerService = new SchedulerService(syncService, config.getCheckIntervalMinutes());
+
+        syncService.setProgressListener(new SyncService.SyncProgressListener() {
+            @Override
+            public void onPlaylistFetchStart(String playlistTitle) {
+                syncCurrentVideo = "Buscando: " + playlistTitle;
+                syncDownloadCurrent = 0;
+                syncDownloadTotal = 0;
+                downloadingVideoId = null;
+                pcs.firePropertyChange("syncProgress", null, syncCurrentVideo);
+            }
+
+            @Override
+            public void onDownloadStart(String videoId, String videoTitle, int current, int total) {
+                syncCurrentVideo = videoTitle;
+                syncDownloadCurrent = current;
+                syncDownloadTotal = total;
+                downloadingVideoId = videoId;
+                pcs.firePropertyChange("syncProgress", null, syncCurrentVideo);
+            }
+
+            @Override
+            public void onDownloadComplete(String videoId, String videoTitle, String errorMessage) {
+                downloadingVideoId = null;
+                if (errorMessage != null) {
+                    videoErrors.put(videoId, errorMessage);
+                }
+                pcs.firePropertyChange("syncProgress", null, videoTitle);
+            }
+        });
     }
 
     public void triggerSyncNow() {
@@ -76,12 +113,40 @@ public class Application {
         return autoSyncRunning;
     }
 
+    public boolean isSyncInProgress() {
+        return syncInProgress;
+    }
+
+    public String getSyncCurrentVideo() {
+        return syncCurrentVideo;
+    }
+
+    public int getSyncDownloadCurrent() {
+        return syncDownloadCurrent;
+    }
+
+    public int getSyncDownloadTotal() {
+        return syncDownloadTotal;
+    }
+
     public List<Playlist> getPlaylists() {
         return syncService.listPlaylists();
     }
 
     public SyncService.PlaylistStats getPlaylistStats(String playlistId) {
         return syncService.getPlaylistStats(playlistId);
+    }
+
+    public List<Video> getVideosByPlaylistId(String playlistId) {
+        return syncService.getPlaylistVideos(playlistId);
+    }
+
+    public String getDownloadingVideoId() {
+        return downloadingVideoId;
+    }
+
+    public String getVideoError(String videoId) {
+        return videoErrors.get(videoId);
     }
 
     public Config getConfig() {
@@ -326,6 +391,14 @@ public class Application {
     }
 
     private void setSyncInProgress(boolean syncing) {
+        if (syncing) {
+            videoErrors.clear();
+        } else {
+            syncCurrentVideo = null;
+            syncDownloadCurrent = 0;
+            syncDownloadTotal = 0;
+            downloadingVideoId = null;
+        }
         boolean old = this.syncInProgress;
         this.syncInProgress = syncing;
         pcs.firePropertyChange("syncInProgress", old, syncing);

@@ -11,9 +11,9 @@ public interface AudioDownloader {
      * Faz download do áudio de um vídeo.
      * @param video Vídeo a ser baixado
      * @param outputDirectory Diretório de destino
-     * @return true se download foi bem-sucedido
+     * @return null se bem-sucedido, mensagem de erro em caso de falha
      */
-    boolean download(Video video, String outputDirectory);
+    String download(Video video, String outputDirectory);
 
     /**
      * Verifica se a ferramenta de download está disponível.

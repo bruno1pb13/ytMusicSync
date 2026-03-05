@@ -20,6 +20,17 @@ public class SyncService {
     private final PlaylistFetcher playlistFetcher;
     private final AudioDownloader audioDownloader;
     private final String downloadDirectory;
+    private SyncProgressListener progressListener;
+
+    public interface SyncProgressListener {
+        void onPlaylistFetchStart(String playlistTitle);
+        void onDownloadStart(String videoId, String videoTitle, int current, int total);
+        void onDownloadComplete(String videoId, String videoTitle, String errorMessage);
+    }
+
+    public void setProgressListener(SyncProgressListener listener) {
+        this.progressListener = listener;
+    }
 
     public SyncService(
             PlaylistRepository playlistRepository,
@@ -92,6 +103,7 @@ public class SyncService {
         Playlist playlist = playlistOpt.get();
         System.out.println("\n=== Sincronizando: " + playlist.getTitle() + " ===");
 
+        if (progressListener != null) progressListener.onPlaylistFetchStart(playlist.getTitle());
         List<Video> fetchedVideos = playlistFetcher.fetchVideos(playlist.getUrl());
         System.out.println("Encontrados " + fetchedVideos.size() + " vídeos na playlist");
 
@@ -109,9 +121,14 @@ public class SyncService {
         List<Video> toDownload = videoRepository.findNotDownloadedByPlaylistId(playlistId);
         System.out.println("\n" + toDownload.size() + " vídeos para baixar");
 
+        int total = toDownload.size();
+        int current = 0;
         for (Video video : toDownload) {
-            boolean success = audioDownloader.download(video, downloadDirectory + "/" + playlist.getTitle());
-            if (success) {
+            current++;
+            if (progressListener != null) progressListener.onDownloadStart(video.getId(), video.getTitle(), current, total);
+            String error = audioDownloader.download(video, downloadDirectory + "/" + playlist.getTitle());
+            if (progressListener != null) progressListener.onDownloadComplete(video.getId(), video.getTitle(), error);
+            if (error == null) {
                 Video updatedVideo = video.markAsDownloaded();
                 videoRepository.save(updatedVideo);
                 downloaded++;
@@ -150,6 +167,13 @@ public class SyncService {
         System.out.println("\n=== RESUMO ===");
         System.out.println("Novos vídeos: " + totalNew);
         System.out.println("Downloads: " + totalDownloaded);
+    }
+
+    /**
+     * Retorna os vídeos de uma playlist específica.
+     */
+    public List<Video> getPlaylistVideos(String playlistId) {
+        return videoRepository.findByPlaylistId(playlistId);
     }
 
     /**

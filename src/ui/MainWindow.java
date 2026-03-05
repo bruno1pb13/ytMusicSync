@@ -2,25 +2,21 @@ package ui;
 
 import application.Application;
 import domain.Playlist;
+import domain.Video;
 import service.SyncService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainWindow extends JFrame {
 
     private final Application app;
-    private JTable playlistTable;
-    private DefaultTableModel tableModel;
     private JButton syncButton;
     private JButton autoSyncButton;
-    private JButton addButton;
-    private JButton removeButton;
     private Timer updateTimer;
 
     // Stat card value labels
@@ -29,6 +25,16 @@ public class MainWindow extends JFrame {
     private JLabel downloadedCountLabel;
     private JLabel pendingCountLabel;
     private JLabel autoSyncStatusLabel;
+
+    // Collapsable playlists panel
+    private JPanel playlistsContainer;
+    private JScrollPane playlistsScrollPane;
+    private final Map<String, Boolean> expandedState = new HashMap<>();
+
+    // Sync progress
+    private JPanel syncProgressPanel;
+    private JProgressBar syncProgressBar;
+    private JLabel syncProgressLabel;
 
     public MainWindow(Application app) {
         this.app = app;
@@ -51,7 +57,7 @@ public class MainWindow extends JFrame {
 
         root.add(createHeader(), BorderLayout.NORTH);
         root.add(createMain(),   BorderLayout.CENTER);
-        root.add(createToolbar(), BorderLayout.SOUTH);
+        root.add(createFooter(), BorderLayout.SOUTH);
     }
 
     // -------------------------------------------------------------------------
@@ -87,8 +93,8 @@ public class MainWindow extends JFrame {
         main.setBackground(MaterialTheme.BACKGROUND);
         main.setBorder(new EmptyBorder(20, 20, 16, 20));
 
-        main.add(createStatsRow(),    BorderLayout.NORTH);
-        main.add(createPlaylistCard(), BorderLayout.CENTER);
+        main.add(createStatsRow(),         BorderLayout.NORTH);
+        main.add(createPlaylistsSection(), BorderLayout.CENTER);
         return main;
     }
 
@@ -110,7 +116,7 @@ public class MainWindow extends JFrame {
                 MaterialTheme.SUCCESS_CONTAINER,    MaterialTheme.ON_SUCCESS_CONTAINER));
         row.add(statCard("Pendentes",         pendingCountLabel,
                 MaterialTheme.SECONDARY_CONTAINER,  MaterialTheme.ON_SECONDARY_CONTAINER));
-        row.add(statCard("Sinc. Automática",  autoSyncStatusLabel,
+        row.add(statCard("Sinc. Automatica",  autoSyncStatusLabel,
                 MaterialTheme.SURFACE_CONTAINER,    MaterialTheme.ON_SURFACE));
 
         return row;
@@ -136,60 +142,248 @@ public class MainWindow extends JFrame {
         return card;
     }
 
-    private JPanel createPlaylistCard() {
-        JPanel card = MaterialTheme.card(MaterialTheme.SURFACE_CONTAINER_LOW);
-        card.setLayout(new BorderLayout(0, 10));
-        card.setBorder(new EmptyBorder(16, 16, 16, 16));
+    private JPanel createPlaylistsSection() {
+        JPanel section = MaterialTheme.card(MaterialTheme.SURFACE_CONTAINER_LOW);
+        section.setLayout(new BorderLayout(0, 10));
+        section.setBorder(new EmptyBorder(16, 16, 16, 16));
 
         JLabel sectionLabel = new JLabel("Playlists");
         sectionLabel.setFont(MaterialTheme.titleSmall());
         sectionLabel.setForeground(MaterialTheme.ON_SURFACE_VARIANT);
-        sectionLabel.setBorder(new EmptyBorder(0, 0, 4, 0));
-        card.add(sectionLabel, BorderLayout.NORTH);
+        sectionLabel.setBorder(new EmptyBorder(0, 0, 8, 0));
+        section.add(sectionLabel, BorderLayout.NORTH);
 
-        String[] cols = {"Título", "Vídeos", "Baixados", "Pendentes", "Última Sincronização"};
-        tableModel = new DefaultTableModel(cols, 0) {
+        playlistsContainer = new JPanel();
+        playlistsContainer.setLayout(new BoxLayout(playlistsContainer, BoxLayout.Y_AXIS));
+        playlistsContainer.setBackground(MaterialTheme.SURFACE_CONTAINER_LOW);
+
+        // Wrapper com BorderLayout faz o container preencher a largura do viewport
+        JPanel viewportWrapper = new JPanel(new BorderLayout());
+        viewportWrapper.setBackground(MaterialTheme.SURFACE_CONTAINER_LOW);
+        viewportWrapper.add(playlistsContainer, BorderLayout.NORTH);
+
+        playlistsScrollPane = new JScrollPane(viewportWrapper);
+        playlistsScrollPane.setBorder(BorderFactory.createEmptyBorder());
+        playlistsScrollPane.getViewport().setBackground(MaterialTheme.SURFACE_CONTAINER_LOW);
+        playlistsScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        section.add(playlistsScrollPane, BorderLayout.CENTER);
+        return section;
+    }
+
+    private JPanel buildCollapsableCard(Playlist playlist, SyncService.PlaylistStats stats, List<Video> videos) {
+        boolean expanded = expandedState.getOrDefault(playlist.getId(), false);
+
+        JPanel outer = new JPanel() {
             @Override
-            public boolean isCellEditable(int row, int col) { return false; }
+            public Dimension getMaximumSize() {
+                return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+            }
         };
+        outer.setLayout(new BoxLayout(outer, BoxLayout.Y_AXIS));
+        outer.setBackground(MaterialTheme.SURFACE_CONTAINER);
+        outer.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, MaterialTheme.OUTLINE_VARIANT));
+        outer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        playlistTable = new JTable(tableModel);
-        playlistTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        playlistTable.setRowHeight(42);
-        playlistTable.setShowGrid(false);
-        playlistTable.setIntercellSpacing(new Dimension(0, 0));
-        playlistTable.setBackground(MaterialTheme.SURFACE_CONTAINER_LOW);
-        playlistTable.setForeground(MaterialTheme.ON_SURFACE);
-        playlistTable.setSelectionBackground(MaterialTheme.PRIMARY_CONTAINER);
-        playlistTable.setSelectionForeground(MaterialTheme.ON_PRIMARY_CONTAINER);
-        playlistTable.setFont(MaterialTheme.bodyMedium());
+        // --- Header ---
+        JPanel header = new JPanel(new BorderLayout(8, 0));
+        header.setBackground(MaterialTheme.SURFACE_CONTAINER);
+        header.setBorder(new EmptyBorder(12, 14, 12, 14));
+        header.setAlignmentX(Component.LEFT_ALIGNMENT);
+        header.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
-        playlistTable.getColumnModel().getColumn(0).setPreferredWidth(340);
-        playlistTable.getColumnModel().getColumn(1).setPreferredWidth(80);
-        playlistTable.getColumnModel().getColumn(2).setPreferredWidth(80);
-        playlistTable.getColumnModel().getColumn(3).setPreferredWidth(80);
-        playlistTable.getColumnModel().getColumn(4).setPreferredWidth(170);
+        JButton toggleBtn = new JButton(expanded ? "▼" : "▶");
+        toggleBtn.setFont(MaterialTheme.labelMedium());
+        toggleBtn.setForeground(MaterialTheme.ON_SURFACE_VARIANT);
+        toggleBtn.setBorderPainted(false);
+        toggleBtn.setContentAreaFilled(false);
+        toggleBtn.setFocusPainted(false);
+        toggleBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        toggleBtn.setPreferredSize(new Dimension(28, 28));
 
-        // Center-align numeric and date columns
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        for (int i = 1; i <= 4; i++) {
-            playlistTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        JLabel titleLabel = new JLabel(playlist.getTitle());
+        titleLabel.setFont(MaterialTheme.bodyMedium().deriveFont(Font.BOLD));
+        titleLabel.setForeground(MaterialTheme.ON_SURFACE);
+
+        String lastSync = playlist.getLastSyncedAt() != null
+                ? playlist.getLastSyncedAt().toString().substring(0, 19).replace("T", " ")
+                : "Nunca";
+        JLabel statsLabel = new JLabel(
+                stats.totalVideos + " videos  |  " + stats.downloaded + " baixados  |  " +
+                stats.pending + " pendentes  |  Ultima sinc: " + lastSync);
+        statsLabel.setFont(MaterialTheme.labelMedium());
+        statsLabel.setForeground(MaterialTheme.ON_SURFACE_VARIANT);
+
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setOpaque(false);
+        titlePanel.add(titleLabel);
+        titlePanel.add(Box.createVerticalStrut(3));
+        titlePanel.add(statsLabel);
+
+        // Action buttons
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        actionPanel.setOpaque(false);
+
+        JButton syncBtn = MaterialTheme.filledTonalButton("Sincronizar");
+        syncBtn.setFont(MaterialTheme.labelMedium());
+        syncBtn.addActionListener(e -> syncPlaylist(playlist.getId()));
+
+        JButton removeBtn = MaterialTheme.outlinedButton("Remover");
+        removeBtn.setFont(MaterialTheme.labelMedium());
+        removeBtn.addActionListener(e -> removePlaylist(playlist.getId(), playlist.getTitle()));
+
+        actionPanel.add(syncBtn);
+        actionPanel.add(removeBtn);
+
+        header.add(toggleBtn, BorderLayout.WEST);
+        header.add(titlePanel, BorderLayout.CENTER);
+        header.add(actionPanel, BorderLayout.EAST);
+
+        // --- Body (video list) ---
+        JPanel body = new JPanel() {
+            @Override
+            public Dimension getMaximumSize() {
+                return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+            }
+        };
+        body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
+        body.setOpaque(false);
+        body.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, MaterialTheme.OUTLINE_VARIANT));
+        body.setAlignmentX(Component.LEFT_ALIGNMENT);
+        body.setVisible(expanded);
+
+        if (videos.isEmpty()) {
+            JLabel emptyLabel = new JLabel("  Nenhum video cadastrado nesta playlist.");
+            emptyLabel.setFont(MaterialTheme.bodyMedium());
+            emptyLabel.setForeground(MaterialTheme.ON_SURFACE_VARIANT);
+            emptyLabel.setBorder(new EmptyBorder(12, 14, 12, 14));
+            emptyLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            body.add(emptyLabel);
+        } else {
+            for (Video video : videos) {
+                body.add(buildVideoRow(video));
+            }
         }
 
-        JTableHeader tableHeader = playlistTable.getTableHeader();
-        tableHeader.setBackground(MaterialTheme.SURFACE_CONTAINER);
-        tableHeader.setForeground(MaterialTheme.ON_SURFACE_VARIANT);
-        tableHeader.setFont(MaterialTheme.labelMedium());
-        tableHeader.setPreferredSize(new Dimension(0, 36));
-        tableHeader.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, MaterialTheme.OUTLINE_VARIANT));
+        // Toggle action
+        toggleBtn.addActionListener(e -> {
+            boolean nowExpanded = !body.isVisible();
+            expandedState.put(playlist.getId(), nowExpanded);
+            body.setVisible(nowExpanded);
+            toggleBtn.setText(nowExpanded ? "▼" : "▶");
+            outer.revalidate();
+            outer.repaint();
+            playlistsContainer.revalidate();
+            playlistsScrollPane.revalidate();
+            playlistsScrollPane.repaint();
+        });
 
-        JScrollPane scrollPane = new JScrollPane(playlistTable);
-        scrollPane.setBorder(BorderFactory.createLineBorder(MaterialTheme.OUTLINE_VARIANT, 1, true));
-        scrollPane.getViewport().setBackground(MaterialTheme.SURFACE_CONTAINER_LOW);
+        outer.add(header);
+        outer.add(body);
+        return outer;
+    }
 
-        card.add(scrollPane, BorderLayout.CENTER);
-        return card;
+    private JPanel buildVideoRow(Video video) {
+        JPanel row = new JPanel(new BorderLayout(10, 0)) {
+            @Override
+            public Dimension getMaximumSize() {
+                return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+            }
+        };
+        row.setOpaque(false);
+        row.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(
+                        MaterialTheme.OUTLINE_VARIANT.getRed(),
+                        MaterialTheme.OUTLINE_VARIANT.getGreen(),
+                        MaterialTheme.OUTLINE_VARIANT.getBlue(), 80)),
+                new EmptyBorder(8, 20, 8, 14)));
+        row.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        boolean downloading = video.getId().equals(app.getDownloadingVideoId());
+        String errorMsg     = app.getVideoError(video.getId());
+        boolean downloaded  = video.isDownloaded();
+
+        String icon;
+        Color iconColor, titleColor, detailColor;
+        String detail;
+
+        if (downloading) {
+            icon        = "\u23F3";  // ⏳
+            iconColor   = MaterialTheme.PRIMARY;
+            titleColor  = MaterialTheme.ON_SURFACE;
+            detail      = "Baixando...";
+            detailColor = MaterialTheme.PRIMARY;
+        } else if (errorMsg != null) {
+            icon        = "\u2717";  // ✗
+            iconColor   = MaterialTheme.ON_ERROR_CONTAINER;
+            titleColor  = MaterialTheme.ON_SURFACE_VARIANT;
+            detail      = "Erro: " + errorMsg;
+            detailColor = MaterialTheme.ON_ERROR_CONTAINER;
+        } else if (downloaded) {
+            icon        = "\u2713";  // ✓
+            iconColor   = MaterialTheme.ON_SUCCESS_CONTAINER;
+            titleColor  = MaterialTheme.ON_SURFACE;
+            detail      = video.getDownloadedAt() != null
+                    ? video.getDownloadedAt().toString().substring(0, 10)
+                    : "Baixado";
+            detailColor = MaterialTheme.ON_SURFACE_VARIANT;
+        } else {
+            icon        = "\u25CB";  // ○
+            iconColor   = MaterialTheme.ON_SURFACE_VARIANT;
+            titleColor  = MaterialTheme.ON_SURFACE_VARIANT;
+            detail      = "Pendente";
+            detailColor = MaterialTheme.ON_SURFACE_VARIANT;
+        }
+
+        JLabel statusIcon = new JLabel(icon);
+        statusIcon.setFont(MaterialTheme.bodyMedium());
+        statusIcon.setForeground(iconColor);
+        statusIcon.setPreferredSize(new Dimension(18, 18));
+
+        JLabel titleLabel = new JLabel(video.getTitle());
+        titleLabel.setFont(MaterialTheme.bodyMedium());
+        titleLabel.setForeground(titleColor);
+
+        JLabel detailLabel = new JLabel(detail);
+        detailLabel.setFont(MaterialTheme.labelMedium());
+        detailLabel.setForeground(detailColor);
+
+        row.add(statusIcon, BorderLayout.WEST);
+        row.add(titleLabel, BorderLayout.CENTER);
+        row.add(detailLabel, BorderLayout.EAST);
+        return row;
+    }
+
+    private JPanel createFooter() {
+        JPanel footer = new JPanel(new BorderLayout());
+        footer.setBackground(MaterialTheme.SURFACE_CONTAINER);
+
+        syncProgressPanel = createSyncProgressPanel();
+        syncProgressPanel.setVisible(false);
+        footer.add(syncProgressPanel, BorderLayout.NORTH);
+        footer.add(createToolbar(), BorderLayout.CENTER);
+        return footer;
+    }
+
+    private JPanel createSyncProgressPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 0));
+        panel.setBackground(MaterialTheme.PRIMARY_CONTAINER);
+        panel.setBorder(new EmptyBorder(8, 20, 8, 20));
+
+        syncProgressLabel = new JLabel("Sincronizando...");
+        syncProgressLabel.setFont(MaterialTheme.bodyMedium());
+        syncProgressLabel.setForeground(MaterialTheme.ON_PRIMARY_CONTAINER);
+
+        syncProgressBar = new JProgressBar(0, 100);
+        syncProgressBar.setIndeterminate(true);
+        syncProgressBar.setPreferredSize(new Dimension(200, 10));
+        syncProgressBar.setBackground(MaterialTheme.PRIMARY_CONTAINER);
+        syncProgressBar.setForeground(MaterialTheme.PRIMARY);
+
+        panel.add(syncProgressLabel, BorderLayout.CENTER);
+        panel.add(syncProgressBar, BorderLayout.EAST);
+        return panel;
     }
 
     private JPanel createToolbar() {
@@ -197,25 +391,13 @@ public class MainWindow extends JFrame {
         toolbar.setBackground(MaterialTheme.SURFACE_CONTAINER);
         toolbar.setBorder(new EmptyBorder(12, 20, 12, 20));
 
-        // Left side — playlist management
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         left.setOpaque(false);
 
-        addButton = MaterialTheme.filledTonalButton("+ Adicionar");
+        JButton addButton = MaterialTheme.filledTonalButton("+ Adicionar");
         addButton.addActionListener(e -> addPlaylist());
-
-        removeButton = MaterialTheme.outlinedButton("Remover");
-        removeButton.addActionListener(e -> removePlaylist());
-        removeButton.setEnabled(false);
-
-        JButton syncSelectedButton = MaterialTheme.textButton("Sinc. Selecionada");
-        syncSelectedButton.addActionListener(e -> syncSelected());
-
         left.add(addButton);
-        left.add(removeButton);
-        left.add(syncSelectedButton);
 
-        // Right side — global actions
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         right.setOpaque(false);
 
@@ -242,13 +424,13 @@ public class MainWindow extends JFrame {
     // -------------------------------------------------------------------------
 
     private void setupListeners() {
-        playlistTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                removeButton.setEnabled(playlistTable.getSelectedRow() != -1);
+        app.addPropertyChangeListener(evt -> SwingUtilities.invokeLater(() -> {
+            updateUI();
+            String prop = evt.getPropertyName();
+            if ("syncProgress".equals(prop) || "syncInProgress".equals(prop)) {
+                updateSyncProgress();
             }
-        });
-
-        app.addPropertyChangeListener(evt -> SwingUtilities.invokeLater(this::updateUI));
+        }));
     }
 
     private void startUpdateTimer() {
@@ -263,7 +445,7 @@ public class MainWindow extends JFrame {
     private void updateUI() {
         SwingUtilities.invokeLater(() -> {
             updateStats();
-            updateTable();
+            updatePlaylistCards();
             updateButtons();
         });
     }
@@ -285,39 +467,34 @@ public class MainWindow extends JFrame {
         autoSyncStatusLabel.setText(app.isAutoSyncRunning() ? "Ativa" : "Desativada");
     }
 
-    private void updateTable() {
-        int selectedRow = playlistTable.getSelectedRow();
-        String selectedId = (selectedRow != -1 && tableModel.getRowCount() > selectedRow)
-                ? getPlaylistIdAtRow(selectedRow) : null;
+    private void updatePlaylistCards() {
+        int scrollPos = playlistsScrollPane.getVerticalScrollBar().getValue();
 
-        tableModel.setRowCount(0);
+        playlistsContainer.removeAll();
         List<Playlist> playlists = app.getPlaylists();
-        int newSelectedRow = -1;
 
-        for (int i = 0; i < playlists.size(); i++) {
-            Playlist playlist = playlists.get(i);
-            SyncService.PlaylistStats stats = app.getPlaylistStats(playlist.getId());
-
-            String lastSync = playlist.getLastSyncedAt() != null
-                    ? playlist.getLastSyncedAt().toString().substring(0, 19).replace("T", " ")
-                    : "Nunca";
-
-            tableModel.addRow(new Object[]{
-                    playlist.getTitle(),
-                    stats.totalVideos,
-                    stats.downloaded,
-                    stats.pending,
-                    lastSync
-            });
-
-            if (playlist.getId().equals(selectedId)) {
-                newSelectedRow = i;
+        if (playlists.isEmpty()) {
+            JLabel emptyLabel = new JLabel("Nenhuma playlist cadastrada. Clique em '+ Adicionar' para comecar.");
+            emptyLabel.setFont(MaterialTheme.bodyMedium());
+            emptyLabel.setForeground(MaterialTheme.ON_SURFACE_VARIANT);
+            emptyLabel.setBorder(new EmptyBorder(24, 20, 24, 20));
+            emptyLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            playlistsContainer.add(emptyLabel);
+        } else {
+            for (Playlist playlist : playlists) {
+                SyncService.PlaylistStats stats = app.getPlaylistStats(playlist.getId());
+                List<Video> videos = app.getVideosByPlaylistId(playlist.getId());
+                JPanel card = buildCollapsableCard(playlist, stats, videos);
+                playlistsContainer.add(card);
             }
         }
 
-        if (newSelectedRow != -1) {
-            playlistTable.setRowSelectionInterval(newSelectedRow, newSelectedRow);
-        }
+        playlistsContainer.add(Box.createVerticalGlue());
+        playlistsContainer.revalidate();
+        playlistsContainer.repaint();
+
+        SwingUtilities.invokeLater(() ->
+                playlistsScrollPane.getVerticalScrollBar().setValue(scrollPos));
     }
 
     private void updateButtons() {
@@ -329,6 +506,30 @@ public class MainWindow extends JFrame {
         autoSyncButton.setForeground(running
                 ? MaterialTheme.ON_TERTIARY_CONTAINER
                 : MaterialTheme.ON_SECONDARY_CONTAINER);
+    }
+
+    private void updateSyncProgress() {
+        boolean syncing = app.isSyncInProgress();
+        syncProgressPanel.setVisible(syncing);
+
+        if (syncing) {
+            String currentVideo = app.getSyncCurrentVideo();
+            int current = app.getSyncDownloadCurrent();
+            int total = app.getSyncDownloadTotal();
+
+            if (total > 0) {
+                syncProgressBar.setIndeterminate(false);
+                syncProgressBar.setMaximum(total);
+                syncProgressBar.setValue(current);
+                syncProgressLabel.setText("Baixando " + current + "/" + total + ":  " +
+                        (currentVideo != null ? currentVideo : ""));
+            } else {
+                syncProgressBar.setIndeterminate(true);
+                syncProgressLabel.setText(currentVideo != null ? currentVideo : "Sincronizando...");
+            }
+        }
+
+        revalidate();
     }
 
     // -------------------------------------------------------------------------
@@ -370,34 +571,15 @@ public class MainWindow extends JFrame {
         }
     }
 
-    private void removePlaylist() {
-        int selectedRow = playlistTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this,
-                    "Selecione uma playlist para remover", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String playlistId    = getPlaylistIdAtRow(selectedRow);
-        String playlistTitle = (String) tableModel.getValueAt(selectedRow, 0);
-
+    private void removePlaylist(String playlistId, String playlistTitle) {
         int result = JOptionPane.showConfirmDialog(this,
                 "Deseja realmente remover a playlist:\n" + playlistTitle + "?",
-                "Confirmar remoção", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                "Confirmar remocao", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (result == JOptionPane.YES_OPTION) {
             app.removePlaylist(playlistId);
+            updateUI();
         }
-    }
-
-    private void syncSelected() {
-        int selectedRow = playlistTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this,
-                    "Selecione uma playlist para sincronizar", "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        syncPlaylist(getPlaylistIdAtRow(selectedRow));
     }
 
     private void syncPlaylist(String playlistId) {
@@ -443,16 +625,6 @@ public class MainWindow extends JFrame {
     private void openSettings() {
         SettingsDialog dialog = new SettingsDialog(this, app);
         dialog.setVisible(true);
-    }
-
-    private String getPlaylistIdAtRow(int row) {
-        String title = (String) tableModel.getValueAt(row, 0);
-        for (Playlist playlist : app.getPlaylists()) {
-            if (playlist.getTitle().equals(title)) {
-                return playlist.getId();
-            }
-        }
-        return null;
     }
 
     // -------------------------------------------------------------------------

@@ -27,7 +27,7 @@ public class YtDlpAudioDownloader implements AudioDownloader {
     }
 
     @Override
-    public boolean download(Video video, String outputDirectory) {
+    public String download(Video video, String outputDirectory) {
         try {
             Path outputPath = Paths.get(outputDirectory);
             Files.createDirectories(outputPath);
@@ -36,19 +36,19 @@ public class YtDlpAudioDownloader implements AudioDownloader {
 
             List<String> command = new ArrayList<>();
             command.add(ytDlpPath);
-            command.add("-x");  // Extrai apenas áudio
+            command.add("-x");
             command.add("--audio-format");
             command.add(audioFormat);
             command.add("--audio-quality");
             command.add(audioQuality);
-            command.add("--no-playlist");  // Baixa apenas o vídeo específico
+            command.add("--no-playlist");
             command.add("--output");
             command.add(outputTemplate);
             command.add("--js-runtimes");
             command.add("node");
-            command.add("--no-mtime");  // Não preserva timestamp original
-            command.add("--embed-thumbnail");  // Embute thumbnail no arquivo
-            command.add("--add-metadata");  // Adiciona metadados
+            command.add("--no-mtime");
+            command.add("--embed-thumbnail");
+            command.add("--add-metadata");
             if (cookiesEnabled) {
                 command.add("--cookies-from-browser");
                 command.add(cookiesBrowser);
@@ -60,6 +60,8 @@ public class YtDlpAudioDownloader implements AudioDownloader {
             System.out.println("Baixando: " + video.getTitle());
 
             Process process = pb.start();
+
+            StringBuilder errorOutput = new StringBuilder();
 
             Thread outputThread = new Thread(() -> {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
@@ -77,6 +79,7 @@ public class YtDlpAudioDownloader implements AudioDownloader {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         System.err.println("  ERRO: " + line);
+                        errorOutput.append(line).append("\n");
                     }
                 } catch (IOException e) {
                     System.err.println("Erro ao ler erro: " + e.getMessage());
@@ -93,16 +96,19 @@ public class YtDlpAudioDownloader implements AudioDownloader {
 
             if (exitCode == 0) {
                 System.out.println("✓ Download concluído: " + video.getTitle());
-                return true;
+                return null;
             } else {
-                System.err.println("✗ Falha no download: " + video.getTitle() + " (código: " + exitCode + ")");
-                return false;
+                String err = errorOutput.toString().trim();
+                String lastLine = err.isEmpty() ? "" : err.substring(err.lastIndexOf('\n') + 1).trim();
+                String msg = lastLine.isEmpty() ? "Código de saída: " + exitCode : lastLine;
+                System.err.println("✗ Falha no download: " + video.getTitle() + " — " + msg);
+                return msg;
             }
 
         } catch (IOException | InterruptedException e) {
             System.err.println("Erro ao baixar vídeo: " + e.getMessage());
             Thread.currentThread().interrupt();
-            return false;
+            return e.getMessage();
         }
     }
 

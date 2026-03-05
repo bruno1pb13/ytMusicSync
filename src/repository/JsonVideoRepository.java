@@ -1,6 +1,7 @@
 package repository;
 
 import domain.Video;
+import util.AppDataDir;
 import com.google.gson.*;
 import java.io.*;
 import java.nio.file.*;
@@ -15,13 +16,18 @@ import java.util.stream.Collectors;
  * Thread-safe com ConcurrentHashMap.
  */
 public class JsonVideoRepository implements VideoRepository {
-    private static final String DATA_FILE = "data/videos.json";
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
+    private final Path dataFile;
     private final Map<String, Video> cache = new ConcurrentHashMap<>();
     private final Gson gson;
 
     public JsonVideoRepository() {
+        this(AppDataDir.get());
+    }
+
+    JsonVideoRepository(Path dataDir) {
+        this.dataFile = dataDir.resolve("videos.json");
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
                 .setPrettyPrinting()
@@ -75,7 +81,7 @@ public class JsonVideoRepository implements VideoRepository {
 
     private void loadFromFile() {
         try {
-            Path path = Paths.get(DATA_FILE);
+            Path path = dataFile;
             if (!Files.exists(path)) {
                 Files.createDirectories(path.getParent());
                 return;
@@ -107,7 +113,7 @@ public class JsonVideoRepository implements VideoRepository {
 
             root.add("videos", videos);
 
-            Path path = Paths.get(DATA_FILE);
+            Path path = dataFile;
             Files.createDirectories(path.getParent());
             Files.writeString(path, gson.toJson(root));
         } catch (IOException e) {

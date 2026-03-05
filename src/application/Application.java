@@ -177,6 +177,7 @@ public class Application {
         if (!schedulerService.isRunning()) {
             schedulerService = new SchedulerService(syncService, config.getCheckIntervalMinutes());
             schedulerService.start();
+            config.setAutoSyncEnabled(true);
             setAutoSyncRunning(true);
         }
     }
@@ -184,7 +185,14 @@ public class Application {
     public void stopAutoSync() {
         if (schedulerService.isRunning()) {
             schedulerService.stop();
+            config.setAutoSyncEnabled(false);
             setAutoSyncRunning(false);
+        }
+    }
+
+    public void restoreAutoSync() {
+        if (config.getAutoSyncEnabled()) {
+            startAutoSync();
         }
     }
 

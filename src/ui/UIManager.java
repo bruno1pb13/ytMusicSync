@@ -23,6 +23,7 @@ public class UIManager {
             mainWindow = new MainWindow(app);
             mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             mainWindow.setVisible(true);
+            app.restoreAutoSync();
         });
     }
 

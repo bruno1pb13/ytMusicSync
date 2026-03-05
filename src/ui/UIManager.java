@@ -1,13 +1,10 @@
 package ui;
 
 import application.Application;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 
-/**
- * Gerenciador da interface gráfica da aplicação.
- * Segue o Single Responsibility Principle: responsável apenas por inicializar e coordenar a UI.
- */
 public class UIManager {
 
     private final Application app;
@@ -17,11 +14,11 @@ public class UIManager {
         this.app = app;
     }
 
-    /**
-     * Inicializa a interface gráfica.
-     * Cria e exibe a janela principal.
-     */
     public void initialize() {
+        // Install FlatLaf and apply Material You customizations before any component is created
+        FlatLightLaf.install();
+        MaterialTheme.apply();
+
         SwingUtilities.invokeLater(() -> {
             mainWindow = new MainWindow(app);
             mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -29,10 +26,6 @@ public class UIManager {
         });
     }
 
-    /**
-     * Retorna a janela principal.
-     * @return MainWindow instance
-     */
     public MainWindow getMainWindow() {
         return mainWindow;
     }

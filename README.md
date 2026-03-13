@@ -49,6 +49,49 @@ java -jar target/ytMusicSync-1.0.0.jar --cli
 - Força o modo linha de comando
 - Útil para servidores ou ambientes sem interface gráfica
 
+## Arquivos e Diretórios
+
+A aplicação armazena todos os seus dados nos diretórios padrão do usuário, seguindo as convenções de cada sistema operacional.
+
+### Linux / macOS
+
+| Finalidade         | Caminho                                         |
+|--------------------|-------------------------------------------------|
+| Configuração       | `~/.config/ytmusicsync/config.properties`       |
+| Dados (playlists)  | `~/.local/share/ytmusicsync/data/playlists.json` |
+| Dados (vídeos)     | `~/.local/share/ytmusicsync/data/videos.json`   |
+| Downloads          | `~/Music/ytMusicSync/`                          |
+
+As variáveis XDG são respeitadas quando definidas (`XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_MUSIC_DIR`).
+
+### Windows
+
+| Finalidade         | Caminho                                              |
+|--------------------|------------------------------------------------------|
+| Configuração       | `%APPDATA%\ytmusicsync\config.properties`            |
+| Dados (playlists)  | `%APPDATA%\ytmusicsync\data\playlists.json`          |
+| Dados (vídeos)     | `%APPDATA%\ytmusicsync\data\videos.json`             |
+| Downloads          | `%USERPROFILE%\Music\ytMusicSync\`                   |
+
+Todos os diretórios são criados automaticamente na primeira execução.
+
+## Configuração
+
+O arquivo `config.properties` é criado automaticamente com valores padrão. As configurações disponíveis estão documentadas em [`config.properties.example`](config.properties.example).
+
+### Variáveis de ambiente opcionais (Linux/macOS)
+
+| Variável          | Efeito                                        |
+|-------------------|-----------------------------------------------|
+| `XDG_CONFIG_HOME` | Sobrescreve o diretório de configuração       |
+| `XDG_DATA_HOME`   | Sobrescreve o diretório de dados              |
+| `XDG_MUSIC_DIR`   | Sobrescreve o diretório padrão de downloads   |
+
+Exemplo:
+```bash
+XDG_MUSIC_DIR=/mnt/nas/music java -jar ytMusicSync-1.0.0.jar
+```
+
 ## Testes
 
 ```bash
@@ -59,18 +102,6 @@ mvn test
 
 - **PR Tests**: Executa testes unitários e build em pull requests
 - **Continuous Integration**: Valida compilação e testes em todos os pushes
-
-## Uso
-
-### Configurações
-
-O arquivo `config.properties` permite personalizar:
-
-- `download.directory`: Diretório de destino dos downloads
-- `check.interval.minutes`: Intervalo entre verificações automáticas (padrão: 60 minutos)
-- `yt-dlp.path`: Caminho para o executável yt-dlp (padrão: yt-dlp)
-- `audio.format`: Formato de áudio - mp3, m4a ou opus (padrão: mp3)
-- `audio.quality`: Qualidade do áudio em kbps (padrão: 192)
 
 ## Roadmap
 

@@ -1,0 +1,65 @@
+# YT Music Sync — Configurações
+#
+# Este arquivo documenta todas as opções disponíveis.
+# A configuração real fica em:
+#   Linux/macOS : ~/.config/ytmusicsync/config.properties
+#   Windows     : %APPDATA%\ytmusicsync\config.properties
+#
+# Os diretórios são criados automaticamente na primeira execução.
+# Não edite este arquivo diretamente — ele serve apenas como referência.
+
+# ------------------------------------------------------------
+# Diretório de downloads
+# Pasta onde os áudios serão salvos.
+#   Padrão Linux/macOS : ~/Music/ytMusicSync
+#   Padrão Windows     : %USERPROFILE%\Music\ytMusicSync
+# Caminhos absolutos são recomendados.
+# ------------------------------------------------------------
+download.directory=~/Music/ytMusicSync
+
+# ------------------------------------------------------------
+# Intervalo de sincronização automática (em minutos)
+# Define de quanto em quanto tempo as playlists são verificadas.
+# Padrão: 60
+# ------------------------------------------------------------
+check.interval.minutes=60
+
+# ------------------------------------------------------------
+# Caminho para o executável yt-dlp
+# Use "yt-dlp" se estiver no PATH, ou informe o caminho completo.
+# Exemplos:
+#   Linux/macOS : /usr/local/bin/yt-dlp
+#   Windows     : C:\Tools\yt-dlp.exe
+# Padrão: yt-dlp
+# ------------------------------------------------------------
+yt-dlp.path=yt-dlp
+
+# ------------------------------------------------------------
+# Formato de áudio
+# Valores aceitos: mp3, m4a, opus
+# Padrão: mp3
+# ------------------------------------------------------------
+audio.format=mp3
+
+# ------------------------------------------------------------
+# Qualidade do áudio (kbps)
+# Valores comuns: 128, 192, 256, 320
+# Padrão: 320
+# ------------------------------------------------------------
+audio.quality=320
+
+# ------------------------------------------------------------
+# Cookies do navegador
+# Permite baixar vídeos que exigem autenticação (ex: age-gate).
+# cookies.enabled : true | false (padrão: false)
+# cookies.browser : chrome, firefox, edge, safari, brave, opera
+# ------------------------------------------------------------
+cookies.enabled=false
+cookies.browser=chrome
+
+# ------------------------------------------------------------
+# Sincronização automática ao iniciar
+# Inicia o scheduler automaticamente quando a aplicação abre.
+# Padrão: false
+# ------------------------------------------------------------
+auto.sync.enabled=false

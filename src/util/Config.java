@@ -9,18 +9,18 @@ import java.util.Properties;
  * Carrega e salva configurações em arquivo properties.
  */
 public class Config {
-    private static final String CONFIG_FILE = "config.properties";
+    private final Path configFile;
     private final Properties properties;
 
     public Config() {
+        this.configFile = AppDataDir.getConfigFile();
         this.properties = new Properties();
         loadConfig();
     }
 
     private void loadConfig() {
-        Path configPath = Paths.get(CONFIG_FILE);
-        if (Files.exists(configPath)) {
-            try (InputStream input = new FileInputStream(CONFIG_FILE)) {
+        if (Files.exists(configFile)) {
+            try (InputStream input = new FileInputStream(configFile.toFile())) {
                 properties.load(input);
             } catch (IOException e) {
                 System.err.println("Erro ao carregar configuração: " + e.getMessage());
@@ -32,7 +32,7 @@ public class Config {
     }
 
     private void createDefaultConfig() {
-        properties.setProperty("download.directory", "./downloads");
+        properties.setProperty("download.directory", AppDataDir.getDefaultDownloadDir().toString());
         properties.setProperty("check.interval.minutes", "60");
         properties.setProperty("yt-dlp.path", "yt-dlp");
         properties.setProperty("audio.format", "mp3");
@@ -41,19 +41,22 @@ public class Config {
         properties.setProperty("cookies.browser", "chrome");
         properties.setProperty("auto.sync.enabled", "false");
         saveConfig();
-        System.out.println("✓ Configuração padrão criada");
+        System.out.println("✓ Configuração padrão criada em: " + configFile);
     }
 
     public void saveConfig() {
-        try (OutputStream output = new FileOutputStream(CONFIG_FILE)) {
-            properties.store(output, "YT Music Sync Configuration");
+        try {
+            Files.createDirectories(configFile.getParent());
+            try (OutputStream output = new FileOutputStream(configFile.toFile())) {
+                properties.store(output, "YT Music Sync Configuration");
+            }
         } catch (IOException e) {
             System.err.println("Erro ao salvar configuração: " + e.getMessage());
         }
     }
 
     public String getDownloadDirectory() {
-        return properties.getProperty("download.directory", "./downloads");
+        return properties.getProperty("download.directory", AppDataDir.getDefaultDownloadDir().toString());
     }
 
     public void setDownloadDirectory(String directory) {

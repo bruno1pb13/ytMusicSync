@@ -90,7 +90,10 @@ public class AutostartManager {
                 + "X-GNOME-Autostart-enabled=true\n";
 
         File desktopFile = getLinuxDesktopFile();
-        desktopFile.getParentFile().mkdirs();
+        File parentDir = desktopFile.getParentFile();
+        if (!parentDir.exists() && !parentDir.mkdirs()) {
+            throw new IOException("Nao foi possivel criar o diretorio: " + parentDir);
+        }
         Files.writeString(desktopFile.toPath(), content);
     }
 

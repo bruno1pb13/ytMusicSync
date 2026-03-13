@@ -70,6 +70,7 @@ class SyncServiceTest {
                 10
         );
         when(playlistFetcher.fetchPlaylistInfo(playlistUrl)).thenReturn(info);
+        when(playlistFetcher.isChannelUrl(playlistUrl)).thenReturn(false);
 
         // Act
         Playlist result = syncService.addPlaylist(playlistUrl);
@@ -228,7 +229,7 @@ class SyncServiceTest {
 
         // Assert
         assertEquals(1, result.downloaded);
-        verify(audioDownloader).download(eq(pendingVideo), contains("Test Playlist"));
+        verify(audioDownloader).download(eq(pendingVideo), eq(DOWNLOAD_DIR));
         verify(videoRepository, times(1)).save(argThat(video ->
                 video.getId().equals("video1") && video.isDownloaded()
         ));

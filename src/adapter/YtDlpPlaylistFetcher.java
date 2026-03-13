@@ -76,12 +76,34 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
     }
 
     @Override
-    public String extractPlaylistId(String playlistUrl) {
-        Pattern pattern = Pattern.compile("list=([a-zA-Z0-9_-]+)");
-        Matcher matcher = pattern.matcher(playlistUrl);
+    public boolean isChannelUrl(String url) {
+        return url.contains("youtube.com/@") ||
+               url.contains("youtube.com/c/") ||
+               url.contains("youtube.com/channel/") ||
+               url.contains("youtube.com/user/");
+    }
 
-        if (matcher.find()) {
-            return matcher.group(1);
+    @Override
+    public String extractPlaylistId(String playlistUrl) {
+        // Playlist ID via list= parameter
+        Pattern listPattern = Pattern.compile("list=([a-zA-Z0-9_-]+)");
+        Matcher listMatcher = listPattern.matcher(playlistUrl);
+        if (listMatcher.find()) {
+            return listMatcher.group(1);
+        }
+
+        // Channel @handle
+        Pattern handlePattern = Pattern.compile("youtube\\.com/@([a-zA-Z0-9_.-]+)");
+        Matcher handleMatcher = handlePattern.matcher(playlistUrl);
+        if (handleMatcher.find()) {
+            return "@" + handleMatcher.group(1);
+        }
+
+        // /c/, /user/, /channel/
+        Pattern channelPattern = Pattern.compile("youtube\\.com/(?:c|user|channel)/([a-zA-Z0-9_-]+)");
+        Matcher channelMatcher = channelPattern.matcher(playlistUrl);
+        if (channelMatcher.find()) {
+            return channelMatcher.group(1);
         }
 
         return Integer.toHexString(playlistUrl.hashCode());
@@ -111,13 +133,22 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
             if (line != null) {
                 JsonObject obj = gson.fromJson(line, JsonObject.class);
 
-                String title = obj.has("playlist_title")
-                        ? obj.get("playlist_title").getAsString()
-                        : "Playlist sem título";
+                String title = null;
+                if (obj.has("playlist_title") && !obj.get("playlist_title").isJsonNull()) {
+                    title = obj.get("playlist_title").getAsString();
+                } else if (obj.has("channel") && !obj.get("channel").isJsonNull()) {
+                    title = obj.get("channel").getAsString();
+                } else if (obj.has("uploader") && !obj.get("uploader").isJsonNull()) {
+                    title = obj.get("uploader").getAsString();
+                }
+                if (title == null || title.isBlank()) {
+                    title = isChannelUrl(playlistUrl) ? "Canal sem título" : "Playlist sem título";
+                }
 
-                int videoCount = obj.has("playlist_count")
-                        ? obj.get("playlist_count").getAsInt()
-                        : 0;
+                int videoCount = 0;
+                if (obj.has("playlist_count") && !obj.get("playlist_count").isJsonNull()) {
+                    videoCount = obj.get("playlist_count").getAsInt();
+                }
 
                 String id = extractPlaylistId(playlistUrl);
 
@@ -129,10 +160,13 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
         } catch (IOException | InterruptedException e) {
             System.err.println("Erro ao buscar informações da playlist: " + e.getMessage());
             Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            System.err.println("Erro ao parsear informações da playlist: " + e.getMessage());
         }
 
         String id = extractPlaylistId(playlistUrl);
-        return new PlaylistInfo(id, "Desconhecida", 0);
+        String fallbackTitle = isChannelUrl(playlistUrl) ? "Canal desconhecido" : "Desconhecida";
+        return new PlaylistInfo(id, fallbackTitle, 0);
     }
 
     private Video parseVideo(JsonObject obj, String playlistId) {

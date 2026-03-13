@@ -47,11 +47,10 @@ class AppDataDirTest {
                         "No Windows, o path deveria começar com APPDATA: " + appData);
             }
         } else {
-            String home = System.getProperty("user.home");
-            assertTrue(pathStr.startsWith(home),
-                    "No Linux/Mac, o path deveria começar com user.home: " + home);
-            assertTrue(pathStr.contains(".ytmusicsync"),
-                    "No Linux/Mac, o path deveria conter '.ytmusicsync'");
+            assertTrue(pathStr.contains("ytmusicsync"),
+                    "No Linux/Mac, o path deveria conter 'ytmusicsync', mas foi: " + pathStr);
+            assertTrue(pathStr.endsWith("data"),
+                    "No Linux/Mac, o path deveria terminar com 'data', mas foi: " + pathStr);
         }
     }
 

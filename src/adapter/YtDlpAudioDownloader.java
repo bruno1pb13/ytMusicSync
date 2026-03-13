@@ -1,6 +1,7 @@
 package adapter;
 
 import domain.Video;
+import util.Config;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,24 +11,21 @@ import java.util.List;
  * Faz download de áudio em formato configurável.
  */
 public class YtDlpAudioDownloader implements AudioDownloader {
-    private final String ytDlpPath;
-    private final String audioFormat;
-    private final String audioQuality;
-    private final boolean cookiesEnabled;
-    private final String cookiesBrowser;
+    private final Config config;
 
-    public YtDlpAudioDownloader(String ytDlpPath, String audioFormat, String audioQuality,
-                                boolean cookiesEnabled, String cookiesBrowser) {
-        this.ytDlpPath = ytDlpPath;
-        this.audioFormat = audioFormat;
-        this.audioQuality = audioQuality;
-        this.cookiesEnabled = cookiesEnabled;
-        this.cookiesBrowser = cookiesBrowser;
+    public YtDlpAudioDownloader(Config config) {
+        this.config = config;
     }
 
     @Override
     public String download(Video video, String outputDirectory) {
         try {
+            String ytDlpPath = config.getYtDlpPath();
+            String audioFormat = config.getAudioFormat();
+            String audioQuality = config.getAudioQuality();
+            boolean cookiesEnabled = config.getCookiesEnabled();
+            String cookiesBrowser = config.getCookiesBrowser();
+
             // yt-dlp cria subpastas automaticamente via template
             String outputTemplate = outputDirectory + "/%(artist,uploader)s/%(album,playlist_title)s/%(title)s.%(ext)s";
 
@@ -112,7 +110,7 @@ public class YtDlpAudioDownloader implements AudioDownloader {
     @Override
     public boolean isAvailable() {
         try {
-            ProcessBuilder pb = new ProcessBuilder(ytDlpPath, "--version");
+            ProcessBuilder pb = new ProcessBuilder(config.getYtDlpPath(), "--version");
             Process process = pb.start();
             int exitCode = process.waitFor();
             return exitCode == 0;
@@ -124,7 +122,7 @@ public class YtDlpAudioDownloader implements AudioDownloader {
     @Override
     public String getVersion() {
         try {
-            ProcessBuilder pb = new ProcessBuilder(ytDlpPath, "--version");
+            ProcessBuilder pb = new ProcessBuilder(config.getYtDlpPath(), "--version");
             Process process = pb.start();
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));

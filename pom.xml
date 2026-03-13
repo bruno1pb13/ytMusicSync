@@ -7,7 +7,7 @@
 
     <groupId>com.ytmusicsync</groupId>
     <artifactId>ytMusicSync</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <packaging>jar</packaging>
 
     <name>YT Music Sync</name>
@@ -75,6 +75,29 @@
         </dependency>
 
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <configuration>
+                            <mainClass>Main</mainClass>
+                            <environmentVariables>
+                                <XDG_CONFIG_HOME>/tmp/yttest/.config</XDG_CONFIG_HOME>
+                                <XDG_DATA_HOME>/tmp/yttest/.local/share</XDG_DATA_HOME>
+                                <XDG_MUSIC_DIR>/tmp/yttest/Music</XDG_MUSIC_DIR>
+                            </environmentVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <build>
         <sourceDirectory>src</sourceDirectory>

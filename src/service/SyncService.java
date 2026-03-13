@@ -6,6 +6,7 @@ import domain.Playlist;
 import domain.Video;
 import repository.PlaylistRepository;
 import repository.VideoRepository;
+import util.Config;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,7 +20,7 @@ public class SyncService {
     private final VideoRepository videoRepository;
     private final PlaylistFetcher playlistFetcher;
     private final AudioDownloader audioDownloader;
-    private final String downloadDirectory;
+    private final Config config;
     private SyncProgressListener progressListener;
 
     public interface SyncProgressListener {
@@ -37,12 +38,12 @@ public class SyncService {
             VideoRepository videoRepository,
             PlaylistFetcher playlistFetcher,
             AudioDownloader audioDownloader,
-            String downloadDirectory) {
+            Config config) {
         this.playlistRepository = playlistRepository;
         this.videoRepository = videoRepository;
         this.playlistFetcher = playlistFetcher;
         this.audioDownloader = audioDownloader;
-        this.downloadDirectory = downloadDirectory;
+        this.config = config;
     }
 
     /**
@@ -129,6 +130,7 @@ public class SyncService {
         for (Video video : toDownload) {
             current++;
             if (progressListener != null) progressListener.onDownloadStart(video.getId(), video.getTitle(), current, total);
+            String downloadDirectory = config.getDownloadDirectory();
             String baseDir = playlist.isChannel()
                     ? downloadDirectory + "/channels"
                     : downloadDirectory;

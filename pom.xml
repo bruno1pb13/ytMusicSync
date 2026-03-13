@@ -59,6 +59,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Dorkbox SystemTray - Linux/KDE StatusNotifierItem support -->
+        <dependency>
+            <groupId>com.dorkbox</groupId>
+            <artifactId>SystemTray</artifactId>
+            <version>4.4</version>
+        </dependency>
+
         <!-- Byte Buddy - Required for Mockito -->
         <dependency>
             <groupId>net.bytebuddy</groupId>

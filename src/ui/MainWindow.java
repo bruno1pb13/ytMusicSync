@@ -8,6 +8,8 @@ import service.SyncService;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -431,6 +433,13 @@ public class MainWindow extends JFrame {
                 updateSyncProgress();
             }
         }));
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowIconified(WindowEvent e) {
+                hideWindow();
+            }
+        });
     }
 
     private void startUpdateTimer() {

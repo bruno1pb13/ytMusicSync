@@ -538,8 +538,8 @@ public class MainWindow extends JFrame {
 
     private void addPlaylist() {
         String url = JOptionPane.showInputDialog(this,
-                "Digite a URL da playlist do YouTube:",
-                "Adicionar Playlist",
+                "Digite a URL da playlist ou canal do YouTube:",
+                "Adicionar Playlist/Canal",
                 JOptionPane.PLAIN_MESSAGE);
 
         if (url != null && !url.trim().isEmpty()) {
@@ -550,8 +550,9 @@ public class MainWindow extends JFrame {
 
                     SwingUtilities.invokeLater(() -> {
                         setCursor(Cursor.getDefaultCursor());
+                        String addedLabel = playlist.isChannel() ? "Canal adicionado" : "Playlist adicionada";
                         int result = JOptionPane.showConfirmDialog(this,
-                                "Playlist adicionada: " + playlist.getTitle() + "\n\nDeseja sincronizar agora?",
+                                addedLabel + ": " + playlist.getTitle() + "\n\nDeseja sincronizar agora?",
                                 "Sincronizar?",
                                 JOptionPane.YES_NO_OPTION,
                                 JOptionPane.QUESTION_MESSAGE);

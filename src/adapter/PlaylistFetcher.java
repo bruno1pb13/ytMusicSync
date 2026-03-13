@@ -25,6 +25,11 @@ public interface PlaylistFetcher {
      */
     PlaylistInfo fetchPlaylistInfo(String playlistUrl);
 
+    /**
+     * Verifica se a URL é de um canal do YouTube (e não de uma playlist).
+     */
+    boolean isChannelUrl(String url);
+
     class PlaylistInfo {
         private final String id;
         private final String title;

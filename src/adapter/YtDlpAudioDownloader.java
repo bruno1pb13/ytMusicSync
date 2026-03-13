@@ -2,7 +2,6 @@ package adapter;
 
 import domain.Video;
 import java.io.*;
-import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,10 +28,8 @@ public class YtDlpAudioDownloader implements AudioDownloader {
     @Override
     public String download(Video video, String outputDirectory) {
         try {
-            Path outputPath = Paths.get(outputDirectory);
-            Files.createDirectories(outputPath);
-
-            String outputTemplate = outputDirectory + "/%(title)s.%(ext)s";
+            // yt-dlp cria subpastas automaticamente via template
+            String outputTemplate = outputDirectory + "/%(artist,uploader)s/%(album,playlist_title)s/%(title)s.%(ext)s";
 
             List<String> command = new ArrayList<>();
             command.add(ytDlpPath);

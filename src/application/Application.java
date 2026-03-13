@@ -245,7 +245,7 @@ public class Application {
             System.out.println("\n╔════════════════════════════════════╗");
             System.out.println("║           MENU PRINCIPAL          ║");
             System.out.println("╠════════════════════════════════════╣");
-            System.out.println("║ 1. Adicionar Playlist             ║");
+            System.out.println("║ 1. Adicionar Playlist/Canal       ║");
             System.out.println("║ 2. Listar Playlists               ║");
             System.out.println("║ 3. Remover Playlist               ║");
             System.out.println("║ 4. Sincronizar Agora              ║");
@@ -288,7 +288,7 @@ public class Application {
     }
 
     private void addPlaylistMenu() {
-        System.out.print("\nURL da playlist: ");
+        System.out.print("\nURL da playlist ou canal: ");
         String url = scanner.nextLine().trim();
 
         if (url.isEmpty()) {
@@ -297,7 +297,8 @@ public class Application {
         }
 
         Playlist playlist = addPlaylist(url);
-        System.out.println("\n✓ Playlist adicionada: " + playlist.getTitle());
+        String label = playlist.isChannel() ? "Canal adicionado" : "Playlist adicionada";
+        System.out.println("\n✓ " + label + ": " + playlist.getTitle());
         System.out.print("\nDeseja sincronizar agora? (s/n): ");
 
         if (scanner.nextLine().trim().equalsIgnoreCase("s")) {

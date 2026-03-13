@@ -8,11 +8,15 @@ import java.util.Objects;
  * Imutável para garantir integridade dos dados.
  */
 public class Playlist {
+    public static final String TYPE_PLAYLIST = "playlist";
+    public static final String TYPE_CHANNEL  = "channel";
+
     private final String id;
     private final String url;
     private final String title;
     private final LocalDateTime lastSyncedAt;
     private final int videoCount;
+    private final String type;
 
     private Playlist(Builder builder) {
         this.id = Objects.requireNonNull(builder.id, "ID não pode ser nulo");
@@ -20,6 +24,7 @@ public class Playlist {
         this.title = builder.title;
         this.lastSyncedAt = builder.lastSyncedAt;
         this.videoCount = builder.videoCount;
+        this.type = builder.type != null ? builder.type : TYPE_PLAYLIST;
     }
 
     public String getId() {
@@ -42,11 +47,20 @@ public class Playlist {
         return videoCount;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public boolean isChannel() {
+        return TYPE_CHANNEL.equals(type);
+    }
+
     public Playlist updateSyncTime(int newVideoCount) {
         return new Builder()
                 .id(this.id)
                 .url(this.url)
                 .title(this.title)
+                .type(this.type)
                 .lastSyncedAt(LocalDateTime.now())
                 .videoCount(newVideoCount)
                 .build();
@@ -81,6 +95,7 @@ public class Playlist {
         private String title;
         private LocalDateTime lastSyncedAt;
         private int videoCount = 0;
+        private String type;
 
         public Builder id(String id) {
             this.id = id;
@@ -104,6 +119,11 @@ public class Playlist {
 
         public Builder videoCount(int videoCount) {
             this.videoCount = videoCount;
+            return this;
+        }
+
+        public Builder type(String type) {
+            this.type = type;
             return this;
         }
 

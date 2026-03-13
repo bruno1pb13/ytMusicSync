@@ -58,16 +58,19 @@ public class SyncService {
         }
 
         PlaylistFetcher.PlaylistInfo info = playlistFetcher.fetchPlaylistInfo(playlistUrl);
+        String type = playlistFetcher.isChannelUrl(playlistUrl) ? Playlist.TYPE_CHANNEL : Playlist.TYPE_PLAYLIST;
 
         Playlist playlist = new Playlist.Builder()
                 .id(info.getId())
                 .url(playlistUrl)
                 .title(info.getTitle())
                 .videoCount(info.getVideoCount())
+                .type(type)
                 .build();
 
         playlistRepository.save(playlist);
-        System.out.println("✓ Playlist adicionada: " + playlist.getTitle());
+        String addedLabel = playlist.isChannel() ? "Canal adicionado" : "Playlist adicionada";
+        System.out.println("✓ " + addedLabel + ": " + playlist.getTitle());
 
         return playlist;
     }
@@ -126,7 +129,10 @@ public class SyncService {
         for (Video video : toDownload) {
             current++;
             if (progressListener != null) progressListener.onDownloadStart(video.getId(), video.getTitle(), current, total);
-            String error = audioDownloader.download(video, downloadDirectory + "/" + playlist.getTitle());
+            String baseDir = playlist.isChannel()
+                    ? downloadDirectory + "/channels"
+                    : downloadDirectory;
+            String error = audioDownloader.download(video, baseDir);
             if (progressListener != null) progressListener.onDownloadComplete(video.getId(), video.getTitle(), error);
             if (error == null) {
                 Video updatedVideo = video.markAsDownloaded();

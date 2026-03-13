@@ -14,6 +14,7 @@ import repository.PlaylistRepository;
 import repository.VideoRepository;
 import service.SyncService.PlaylistStats;
 import service.SyncService.SyncResult;
+import util.Config;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,6 +24,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SyncService Tests")
@@ -40,17 +42,20 @@ class SyncServiceTest {
     @Mock
     private AudioDownloader audioDownloader;
 
+    @Mock
+    private Config config;
+
     private SyncService syncService;
-    private static final String DOWNLOAD_DIR = "/tmp/test";
 
     @BeforeEach
     void setUp() {
+        lenient().when(config.getDownloadDirectory()).thenReturn("/tmp/test");
         syncService = new SyncService(
                 playlistRepository,
                 videoRepository,
                 playlistFetcher,
                 audioDownloader,
-                DOWNLOAD_DIR
+                config
         );
     }
 
@@ -229,7 +234,7 @@ class SyncServiceTest {
 
         // Assert
         assertEquals(1, result.downloaded);
-        verify(audioDownloader).download(eq(pendingVideo), eq(DOWNLOAD_DIR));
+        verify(audioDownloader).download(eq(pendingVideo), eq("/tmp/test"));
         verify(videoRepository, times(1)).save(argThat(video ->
                 video.getId().equals("video1") && video.isDownloaded()
         ));

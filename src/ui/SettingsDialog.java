@@ -364,6 +364,7 @@ public class SettingsDialog extends JDialog {
             }
 
             String qualityStr = (String) audioQualityCombo.getSelectedItem();
+            if (qualityStr == null) qualityStr = "";
             int quality = Integer.parseInt(qualityStr.trim());
             if (quality < 64 || quality > 320) {
                 JOptionPane.showMessageDialog(this,
@@ -373,7 +374,7 @@ public class SettingsDialog extends JDialog {
             }
 
             String format = (String) audioFormatCombo.getSelectedItem();
-            if (!format.equals("mp3") && !format.equals("m4a") && !format.equals("opus")) {
+            if (format == null || (!format.equals("mp3") && !format.equals("m4a") && !format.equals("opus"))) {
                 JOptionPane.showMessageDialog(this,
                         "Formato de audio invalido. Use: mp3, m4a ou opus.",
                         "Erro de Validacao", JOptionPane.ERROR_MESSAGE);

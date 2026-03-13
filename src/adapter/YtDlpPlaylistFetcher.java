@@ -1,6 +1,7 @@
 package adapter;
 
 import domain.Video;
+import util.Config;
 import com.google.gson.*;
 import java.io.*;
 import java.time.LocalDate;
@@ -14,16 +15,12 @@ import java.util.regex.*;
  * Executa comandos do yt-dlp e parseia a saída JSON.
  */
 public class YtDlpPlaylistFetcher implements PlaylistFetcher {
-    private final String ytDlpPath;
+    private final Config config;
     private final Gson gson;
-    private final boolean cookiesEnabled;
-    private final String cookiesBrowser;
 
-    public YtDlpPlaylistFetcher(String ytDlpPath, boolean cookiesEnabled, String cookiesBrowser) {
-        this.ytDlpPath = ytDlpPath;
+    public YtDlpPlaylistFetcher(Config config) {
+        this.config = config;
         this.gson = new GsonBuilder().create();
-        this.cookiesEnabled = cookiesEnabled;
-        this.cookiesBrowser = cookiesBrowser;
     }
 
     @Override
@@ -33,12 +30,12 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
 
         try {
             List<String> command = new ArrayList<>();
-            command.add(ytDlpPath);
+            command.add(config.getYtDlpPath());
             command.add("--flat-playlist");
             command.add("--dump-json");
-            if (cookiesEnabled) {
+            if (config.getCookiesEnabled()) {
                 command.add("--cookies-from-browser");
-                command.add(cookiesBrowser);
+                command.add(config.getCookiesBrowser());
             }
             command.add(playlistUrl);
 
@@ -113,14 +110,14 @@ public class YtDlpPlaylistFetcher implements PlaylistFetcher {
     public PlaylistInfo fetchPlaylistInfo(String playlistUrl) {
         try {
             List<String> command = new ArrayList<>();
-            command.add(ytDlpPath);
+            command.add(config.getYtDlpPath());
             command.add("--flat-playlist");
             command.add("--dump-json");
             command.add("--playlist-end");
             command.add("1");
-            if (cookiesEnabled) {
+            if (config.getCookiesEnabled()) {
                 command.add("--cookies-from-browser");
-                command.add(cookiesBrowser);
+                command.add(config.getCookiesBrowser());
             }
             command.add(playlistUrl);
 
